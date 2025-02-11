@@ -17,14 +17,14 @@ export const LoginScreen = () => {
 			console.log(`OTP sent to ${email}`);
 		},
 		onLoginSuccess(user, isNewUser) {
-			console.log(`User logged in: ${user.email}, New User: ${isNewUser}`);
+			console.log(
+				`User logged in: ${user.linked_accounts.find((account) => account.type === "email")?.address}, New User: ${isNewUser}`,
+			);
 		},
 		onError(error) {
 			console.error("Error during login flow:", error);
 		},
 	});
-
-	const isEmailFlow = state.status !== "initial" && state.status !== "error";
 
 	return (
 		<View style={styles.container}>
@@ -32,7 +32,7 @@ export const LoginScreen = () => {
 				<Text style={styles.title}>Naki</Text>
 			</View>
 
-			{!isEmailFlow ? (
+			{state.status === "initial" || state.status === "sending-code" ? (
 				<>
 					<TextInput
 						value={email}
@@ -48,7 +48,7 @@ export const LoginScreen = () => {
 						onPress={() => sendCode({ email })}
 					>
 						<FontAwesome name="envelope" size={24} color="black" />
-						<Text style={styles.buttonText}>Login</Text>
+						<Text style={styles.buttonText}>Send Code</Text>
 					</TouchableOpacity>
 					{state.status === "sending-code" && (
 						<Text style={styles.infoText}>Sending Code...</Text>
@@ -85,21 +85,17 @@ export const LoginScreen = () => {
 				</>
 			)}
 
-			{!isEmailFlow && (
-				<>
-					<Text style={styles.orText}>Or</Text>
+			<Text style={styles.orText}>Or</Text>
 
-					<TouchableOpacity style={styles.button}>
-						<FontAwesome name="apple" size={24} color="black" />
-						<Text style={styles.buttonText}>Continue with Apple</Text>
-					</TouchableOpacity>
+			<TouchableOpacity style={styles.button}>
+				<FontAwesome name="apple" size={24} color="black" />
+				<Text style={styles.buttonText}>Continue with Apple</Text>
+			</TouchableOpacity>
 
-					<TouchableOpacity style={styles.button}>
-						<FontAwesome name="google" size={24} color="black" />
-						<Text style={styles.buttonText}>Continue with Google</Text>
-					</TouchableOpacity>
-				</>
-			)}
+			<TouchableOpacity style={styles.button}>
+				<FontAwesome name="google" size={24} color="black" />
+				<Text style={styles.buttonText}>Continue with Google</Text>
+			</TouchableOpacity>
 		</View>
 	);
 };

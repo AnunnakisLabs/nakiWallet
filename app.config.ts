@@ -2,12 +2,13 @@ import type { ExpoConfig } from "expo/config";
 
 export default {
 	expo: {
-		name: "Naki Wallet",
-		slug: "naki-wallet",
+		owner: "espaciofuturo",
+		name: "Naki",
+		slug: "naki",
 		version: "1.0.0",
 		orientation: "portrait",
 		icon: "./assets/images/icon.png",
-		scheme: "naki-wallet",
+		scheme: "naki",
 		userInterfaceStyle: "automatic",
 		splash: {
 			image: "./assets/images/splash.png",
@@ -29,6 +30,7 @@ export default {
 			infoPlist: {
 				NSAppTransportSecurity: {
 					NSAllowsArbitraryLoads: true,
+					ITSAppUsesNonExemptEncryption: false,
 				},
 			},
 			appleTeamId: "U7K8WDQ7LT",
@@ -49,6 +51,9 @@ export default {
 			privyAppId: "cm6zsggpg00ua6u2xo59pgkdr",
 			privyClientId: "client-WY5gK6eKuf4rCFXuTRLQEEv5miEkfTLhoqiMJrt55UUYg",
 			passkeyAssociatedDomain: "https://<your-associated-domain>",
+			eas: {
+				projectId: "8075b53b-fc35-4a73-ad60-e3fa7379f4c0",
+			},
 		},
 		plugins: [
 			"expo-router",

@@ -23,7 +23,7 @@ export default function RootLayout() {
 				clientId={Constants.expoConfig?.extra?.privyClientId}
 			>
 				<Stack>
-					<Stack.Screen name="index" />
+					<Stack.Screen name="index" options={{ headerShown: false }} />
 				</Stack>
 				<PrivyElements />
 			</PrivyProvider>
