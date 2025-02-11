@@ -66,7 +66,7 @@ export default {
 						deploymentTarget: "17.5",
 					},
 					android: {
-						compileSdkVersion: 34,
+						compileSdkVersion: 35,
 					},
 				},
 			],
