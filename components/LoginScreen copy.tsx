@@ -9,7 +9,7 @@ import {
 import { FontAwesome } from "@expo/vector-icons";
 import { useLoginWithEmail } from "@privy-io/expo";
 
-export const LoginScreen = () => {
+export default function LoginScreen() {
 	const [email, setEmail] = useState("");
 	const [code, setCode] = useState("");
 	const { state, sendCode, loginWithCode } = useLoginWithEmail({
