@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -18,14 +18,13 @@ import * as Haptics from 'expo-haptics';
 export default function NFCPaymentScreen() {
   const router = useRouter();
   const [isScanning, setIsScanning] = useState(false);
-  const [nfcSupported, setNfcSupported] = useState(false);
-  const pulseAnim = new Animated.Value(1);
-  const pulseScale = new Animated.Value(1);
-  const pulseOpacity = new Animated.Value(1);
+  const pulseAnim = React.useRef(new Animated.Value(1)).current;
+  const pulseScale = React.useRef(new Animated.Value(1)).current;
+  const pulseOpacity = React.useRef(new Animated.Value(1)).current;
 
   const startPulseAnimation = () => {
     // Icon pulse animation
-    Animated.loop(
+    const iconPulse = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
           toValue: 0.6,
@@ -40,10 +39,10 @@ export default function NFCPaymentScreen() {
           useNativeDriver: true,
         }),
       ])
-    ).start();
+    );
 
     // Ripple effect animation
-    Animated.loop(
+    const ripplePulse = Animated.loop(
       Animated.parallel([
         Animated.sequence([
           Animated.timing(pulseScale, {
@@ -72,18 +71,33 @@ export default function NFCPaymentScreen() {
           }),
         ]),
       ])
-    ).start();
+    );
+
+    iconPulse.start();
+    ripplePulse.start();
+
+    return () => {
+      iconPulse.stop();
+      ripplePulse.stop();
+    };
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
+    let cleanup: (() => void) | undefined;
+
     if (isScanning) {
-      startPulseAnimation();
+      cleanup = startPulseAnimation();
     } else {
       pulseAnim.setValue(1);
       pulseScale.setValue(1);
       pulseOpacity.setValue(1);
-      Animated.stopAnimation();
     }
+
+    return () => {
+      if (cleanup) {
+        cleanup();
+      }
+    };
   }, [isScanning]);
 
   const handleSuccessfulPayment = async () => {
@@ -100,17 +114,6 @@ export default function NFCPaymentScreen() {
           onPress: () => router.back(),
         },
       ]
-    );
-  };
-
-  const handleFailedPayment = async (error) => {
-    setIsScanning(false);
-    if (Platform.OS !== 'web') {
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    }
-    Alert.alert(
-      'Payment Failed',
-      'There was an error processing your payment. Please try again.'
     );
   };
 
@@ -264,7 +267,12 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   backButton: {
-    padding: 8,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: 20,
@@ -272,7 +280,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   placeholder: {
-    width: 36,
+    width: 40,
   },
   webUnsupported: {
     flex: 1,
