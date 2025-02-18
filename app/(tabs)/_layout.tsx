@@ -46,6 +46,15 @@ export default function TabLayout() {
           ),
         }}
       />
+       <Tabs.Screen
+        name="social"
+        options={{
+          title: 'Social',
+          tabBarIcon: ({ size, color }) => (
+            <FontAwesome name="users" size={size} color={color} />
+          ),
+        }}
+      />
       <Tabs.Screen
         name="history"
         options={{
