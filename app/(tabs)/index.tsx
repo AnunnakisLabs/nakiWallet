@@ -136,7 +136,7 @@ export default function HomeScreen() {
           <Link href="/payment" asChild>
             <QuickAction icon="paper-plane" title="Send" />
           </Link>
-          <Link href="/payment" asChild>
+          <Link href="/receive-money" asChild>
             <QuickAction icon="download" title="Receive" />
           </Link>
           <Link href="/add-money" asChild>

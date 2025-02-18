@@ -55,6 +55,15 @@ export default function TabLayout() {
           ),
         }}
       />
+        <Tabs.Screen
+        name="qrScan"
+        options={{
+          title: 'Scan',
+          tabBarIcon: ({ size, color }) => (
+            <FontAwesome name="qrcode" size={size} color={color} />
+          ),
+        }}
+      />
       <Tabs.Screen
         name="history"
         options={{
