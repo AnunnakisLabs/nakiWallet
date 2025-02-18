@@ -29,16 +29,32 @@ export default function RootLayout() {
         clientId={Constants.expoConfig?.extra?.privyClientId}
       >
         <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: '#8134AF' },
-          }}
-        >
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="signup" />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="light" />
+        screenOptions={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      >
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="edit-profile" />
+        <Stack.Screen name="notifications" />
+        <Stack.Screen name="nfc-payment" />
+        <Stack.Screen name="cards" />
+        <Stack.Screen name="banks" />
+        <Stack.Screen name="add-money" />
+        <Stack.Screen name="add-money-crypto" />
+        <Stack.Screen name="add-money-debit" />
+        <Stack.Screen name="add-money-bank" />
+        <Stack.Screen name="add-money-paypal" />
+        <Stack.Screen name="friend-profile" />
+        <Stack.Screen name="faq" />
+        <Stack.Screen name="contact" />
+        <Stack.Screen name="terms" />
+        <Stack.Screen name="privacy" />
+        <Stack.Screen name="income" />
+        <Stack.Screen name="expenses" />
+      </Stack>
+      <StatusBar style="light" />
       </PrivyProvider>
     </>
   )

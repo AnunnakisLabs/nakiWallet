@@ -3,6 +3,8 @@ import Constants from "expo-constants";
 import {LoginScreen} from "@/components/LoginScreen";
 import { usePrivy } from "@privy-io/expo";
 import { UserScreen } from "@/components/UserScreen";
+import { Redirect } from 'expo-router';
+
 
 export default function Index() {
 	const { user } = usePrivy();
@@ -40,5 +42,5 @@ export default function Index() {
 			</SafeAreaView>
 		);
 	}
-	return !user ? <LoginScreen /> : <UserScreen />;
+	return !user ? <LoginScreen /> : <Redirect href="/(tabs)" />	;
 }
