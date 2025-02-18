@@ -36,13 +36,13 @@ const CryptoOption = ({ icon, name, symbol, price, selected, onSelect }) => (
 
 export default function AddMoneyCryptoScreen() {
   const router = useRouter();
-  const [selectedCrypto, setSelectedCrypto] = useState('BTC');
+  const [selectedCrypto, setSelectedCrypto] = useState('USDC');
   const [walletAddress] = useState('bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh');
 
   const cryptoOptions = [
-    { icon: 'bitcoin', name: 'Bitcoin', symbol: 'BTC', price: '43,567.89' },
-    { icon: 'ethereum', name: 'Ethereum', symbol: 'ETH', price: '2,345.67' },
-    { icon: 'dollar', name: 'USDT', symbol: 'USDT', price: '1.00' },
+    // { icon: 'bitcoin', name: 'Bitcoin', symbol: 'BTC', price: '43,567.89' },
+    // { icon: 'ethereum', name: 'Ethereum', symbol: 'ETH', price: '2,345.67' },
+    { icon: 'dollar', name: 'USDC', symbol: 'USDC', price: '1.00' },
   ];
 
   const handleCryptoSelect = (symbol) => {

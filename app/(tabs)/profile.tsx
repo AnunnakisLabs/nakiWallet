@@ -77,9 +77,9 @@ export default function ProfileScreen() {
   const recentTransactions = [
     { 
       id: 1, 
-      name: 'Ruben Martinez', 
-      username: '@rubenmartinez',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120',
+      name: 'Ruben Abarca', 
+      username: '@espaciofuturoio',
+      avatar: 'https://avatars.githubusercontent.com/u/164825567?v=4',
       amount: -45.00, 
       date: '2h ago', 
       type: 'payment',
@@ -88,9 +88,9 @@ export default function ProfileScreen() {
     },
     { 
       id: 2, 
-      name: 'Anouk Graaf',
-      username: '@anoukgraaf',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120',
+      name: 'Anouk Rímola',
+      username: '@AnoukRImola',
+      avatar: 'https://avatars.githubusercontent.com/u/77553677?v=4',
       amount: 28.50, 
       date: '5h ago', 
       type: 'request',
@@ -99,9 +99,9 @@ export default function ProfileScreen() {
     },
     { 
       id: 3, 
-      name: 'Pablo Silva',
-      username: '@pablosilva',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120',
+      name: 'Pablo Villaplana',
+      username: '@PabloVillaplana',
+      avatar: 'https://avatars.githubusercontent.com/u/35789725?v=4',
       amount: -12.75, 
       date: 'Yesterday', 
       type: 'payment',
@@ -234,27 +234,50 @@ export default function ProfileScreen() {
           <Text style={styles.sectionTitle}>Settings</Text>
           <ProfileAction
             icon="lock"
-            title="Privacy"
-            subtitle="Manage your privacy settings"
-            onPress={() => {}}
+            title="Security"
+            subtitle="2FA, Face ID, Password"
+            onPress={() => router.push('/security')}
           />
           <ProfileAction
             icon="bell"
             title="Notifications"
-            subtitle="Configure your notifications"
-            onPress={() => {}}
+            subtitle="Payment alerts, Messages"
+            onPress={() => router.push('/notification-settings')}
+          />
+          <ProfileAction
+            icon="gear"
+            title="Preferences"
+            subtitle="Language, Currency"
+            onPress={() => router.push('/preferences')}
+          />
+        </View>
+
+        {/* Help & Legal */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Help & Legal</Text>
+          <ProfileAction
+            icon="question-circle"
+            title="FAQ"
+            subtitle="Frequently asked questions"
+            onPress={() => router.push('/faq')}
+          />
+          <ProfileAction
+            icon="envelope"
+            title="Contact Us"
+            subtitle="Get support"
+            onPress={() => router.push('/contact')}
+          />
+          <ProfileAction
+            icon="file-text"
+            title="Terms & Conditions"
+            subtitle="Read our terms"
+            onPress={() => router.push('/terms')}
           />
           <ProfileAction
             icon="shield"
-            title="Security"
-            subtitle="Protect your account"
-            onPress={() => {}}
-          />
-          <ProfileAction
-            icon="question-circle"
-            title="Help Center"
-            subtitle="Get support"
-            onPress={() => {}}
+            title="Privacy Policy"
+            subtitle="How we handle your data"
+            onPress={() => router.push('/privacy')}
           />
         </View>
 

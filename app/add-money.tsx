@@ -67,7 +67,7 @@ export default function AddMoneyScreen() {
           <PaymentMethod
             icon="bitcoin"
             title="Cryptocurrency"
-            subtitle="BTC, ETH, USDT"
+            subtitle="USDC"
             onPress={() => router.push('/add-money-crypto')}
           />
         </View>

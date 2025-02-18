@@ -71,7 +71,20 @@ export default {
 				},
 			],
 			"expo-font",
+			[
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera to scan QR codes."
+        }
+      ],
+      [
+        "expo-barcode-scanner",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera to scan QR codes."
+        }
+      ]
 		],
+		
 		experiments: {
 			typedRoutes: true,
 			newArchEnabled: true,

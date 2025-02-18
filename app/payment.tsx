@@ -24,10 +24,10 @@ export default function PaymentScreen() {
   const [note, setNote] = useState('');
 
   const recentContacts = [
-    { id: 1, name: 'Anouk', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120' },
-    { id: 2, name: 'Ruben', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120' },
+    { id: 1, name: 'Anouk', image: 'https://avatars.githubusercontent.com/u/77553677?v=4' },
+    { id: 2, name: 'Ruben', image: 'https://avatars.githubusercontent.com/u/164825567?v=4', },
     { id: 3, name: 'Veronica', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120' },
-    { id: 4, name: 'Pablo', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120' },
+    { id: 4, name: 'Pablo', image: 'https://avatars.githubusercontent.com/u/35789725?v=4' },
   ];
 
   const quickAmounts = ['$5', '$10', '$20', '$50', '$100'];

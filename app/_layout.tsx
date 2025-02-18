@@ -34,13 +34,11 @@ export default function RootLayout() {
           animation: 'slide_from_right',
         }}
       >
-        <Stack.Screen name="index" />
+         <Stack.Screen name="index" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="edit-profile" />
         <Stack.Screen name="notifications" />
         <Stack.Screen name="nfc-payment" />
-        <Stack.Screen name="cards" />
-        <Stack.Screen name="banks" />
         <Stack.Screen name="add-money" />
         <Stack.Screen name="add-money-crypto" />
         <Stack.Screen name="add-money-debit" />

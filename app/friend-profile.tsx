@@ -22,9 +22,9 @@ export default function FriendProfileScreen() {
       id: 1, 
       type: 'received',
       amount: 500,
-      from: 'Alice Johnson',
+      from: 'Ruben Abarca',
       fromAddress: '0x8765...4321',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120',
+      avatar:'https://avatars.githubusercontent.com/u/164825567?v=4',
       message: '🎨 Commission payment',
       time: '2h ago'
     },
@@ -32,9 +32,9 @@ export default function FriendProfileScreen() {
       id: 2, 
       type: 'sent',
       amount: 200,
-      to: 'Bob Smith',
+      to: 'Pedro A. González',
       toAddress: '0x9876...5432',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120',
+      avatar: 'https://avatars.githubusercontent.com/u/14959399?v=4',
       message: '🍽️ Dinner split',
       time: '5h ago'
     },
