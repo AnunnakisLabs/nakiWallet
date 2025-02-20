@@ -27,6 +27,13 @@ const resolveRequestWithPackageExports = (context, moduleName, platform) => {
 
 config.resolver.resolveRequest = resolveRequestWithPackageExports;
 
+module.exports = {
+  resolver: {
+    sourceExts: ["ts", "tsx", "js", "jsx", "json"],
+  },
+  ...getDefaultConfig(__dirname),
+};
+
 module.exports = withNativeWind(config, {
   input: "./global.css"
 });
