@@ -42,7 +42,7 @@ export default function Index() {
 			</SafeAreaView>
 		);
 	}
-	return  <Redirect href="/(tabs)" /> 	;
+	// return  <Redirect href="/(tabs)" /> 	;
 
-	// return !user ? <LoginScreen /> : <Redirect href="/(tabs)" />	;
+	return !user ? <LoginScreen /> : <Redirect href="/(tabs)" />	;
 }
