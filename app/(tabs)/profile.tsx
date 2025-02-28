@@ -12,6 +12,8 @@ import {
 import { FontAwesome } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, useRouter } from 'expo-router';
+import { usePrivy, getUserEmbeddedWallet } from '@privy-io/expo';
+import * as Clipboard from 'expo-clipboard';
 
 const ProfileAction = ({ icon, title, subtitle, onPress }) => (
   <TouchableOpacity style={styles.actionItem} onPress={onPress}>
@@ -28,10 +30,15 @@ const ProfileAction = ({ icon, title, subtitle, onPress }) => (
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const user = {
+  const { user, logout } = usePrivy();
+  if (!user) {
+    return router.push('/');
+  }
+  const account = getUserEmbeddedWallet(user);
+  const userData = {
     name: 'Francisco campos',
     username: '@sasasamaes',
-    walletAddress: '0x1234...5678',
+    walletAddress: `${(account?.address || '0x0000...0000').slice(0, 6)}...${(account?.address || '0x0000...0000').slice(-4)}`,
     avatar: 'https://avatars.githubusercontent.com/u/993828?s=400&u=ad62640da5de4fc2433fde838986a6897fe3751a&v=4',
     balance: 1234.56,
   };
@@ -53,7 +60,10 @@ export default function ProfileScreen() {
           {
             text: 'Sign Out',
             style: 'destructive',
-            onPress: () => router.replace('/'),
+            onPress: async () => {
+              await logout();
+              router.replace('/');
+            }
           },
         ],
         { cancelable: true }
@@ -63,7 +73,7 @@ export default function ProfileScreen() {
 
   const handleCopyAddress = async () => {
     try {
-      await navigator.clipboard.writeText(user.walletAddress);
+      await Clipboard.setStringAsync(account?.address || '');
       if (Platform.OS === 'web') {
         alert('Wallet address copied to clipboard!');
       } else {
@@ -75,35 +85,35 @@ export default function ProfileScreen() {
   };
 
   const recentTransactions = [
-    { 
-      id: 1, 
-      name: 'Ruben Abarca', 
+    {
+      id: 1,
+      name: 'Ruben Abarca',
       username: '@espaciofuturoio',
       avatar: 'https://avatars.githubusercontent.com/u/164825567?v=4',
-      amount: -45.00, 
-      date: '2h ago', 
+      amount: -45.00,
+      date: '2h ago',
       type: 'payment',
       message: '🍽️ Dinner payment',
       walletAddress: '0x8765...4321'
     },
-    { 
-      id: 2, 
+    {
+      id: 2,
       name: 'Anouk Rímola',
       username: '@AnoukRImola',
       avatar: 'https://avatars.githubusercontent.com/u/77553677?v=4',
-      amount: 28.50, 
-      date: '5h ago', 
+      amount: 28.50,
+      date: '5h ago',
       type: 'request',
       message: '🎵 Concert tickets',
       walletAddress: '0x9876...5432'
     },
-    { 
-      id: 3, 
+    {
+      id: 3,
       name: 'Pablo Villaplana',
       username: '@PabloVillaplana',
       avatar: 'https://avatars.githubusercontent.com/u/35789725?v=4',
-      amount: -12.75, 
-      date: 'Yesterday', 
+      amount: -12.75,
+      date: 'Yesterday',
       type: 'payment',
       message: '☕ Coffee and pastries',
       walletAddress: '0x3456...7890'
@@ -116,20 +126,20 @@ export default function ProfileScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
-            <Image source={{ uri: user.avatar }} style={styles.avatar} />
+            <Image source={{ uri: userData.avatar }} style={styles.avatar} />
             <View style={styles.userInfo}>
-              <Text style={styles.name}>{user.name}</Text>
-              <Text style={styles.username}>{user.username}</Text>
-              <TouchableOpacity 
+              <Text style={styles.name}>{userData.name}</Text>
+              <Text style={styles.username}>{userData.username}</Text>
+              <TouchableOpacity
                 style={styles.walletAddressContainer}
                 onPress={handleCopyAddress}
               >
-                <Text style={styles.walletAddress}>{user.walletAddress}</Text>
+                <Text style={styles.walletAddress}>{userData.walletAddress}</Text>
                 <FontAwesome name="copy" size={14} color="#E0E0E0" style={styles.copyIcon} />
               </TouchableOpacity>
             </View>
           </View>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.editButton}
             onPress={() => router.push('/edit-profile')}
           >
@@ -140,9 +150,9 @@ export default function ProfileScreen() {
         {/* Balance Card */}
         <View style={styles.balanceCard}>
           <Text style={styles.balanceLabel}>Available Balance</Text>
-          <Text style={styles.balanceAmount}>${user.balance.toFixed(2)}</Text>
+          <Text style={styles.balanceAmount}>${userData.balance.toFixed(2)}</Text>
           <View style={styles.balanceActions}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.balanceAction}
               onPress={() => router.push('/income')}
             >
@@ -151,7 +161,7 @@ export default function ProfileScreen() {
               <Text style={styles.balanceActionAmount}>$3,428.50</Text>
             </TouchableOpacity>
             <View style={styles.balanceActionDivider} />
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.balanceAction}
               onPress={() => router.push('/expenses')}
             >
@@ -194,8 +204,8 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recent Activity</Text>
           {recentTransactions.map((transaction) => (
-            <TouchableOpacity 
-              key={transaction.id} 
+            <TouchableOpacity
+              key={transaction.id}
               style={styles.transaction}
               onPress={() => router.push({
                 pathname: '/friend-profile',
@@ -207,7 +217,7 @@ export default function ProfileScreen() {
                 }
               })}
             >
-              <Image 
+              <Image
                 source={{ uri: transaction.avatar }}
                 style={styles.transactionAvatar}
               />
@@ -282,7 +292,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* Sign Out Button */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.signOutButton}
           onPress={handleSignOut}
         >
