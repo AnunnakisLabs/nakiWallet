@@ -16,11 +16,14 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getUserEmbeddedWallet, usePrivy } from '@privy-io/expo';
 import * as Haptics from 'expo-haptics';
-import * as SecureStore from 'expo-secure-store'; // Usando SecureStore para almacenamiento
+import useBlockchain from '@/hooks/useBlockchain';
 
 export default function AddMoneyDebitScreen() {
   const router = useRouter();
   const { user } = usePrivy();
+  
+  const { receiveUSDC, balance, isLoading: blockchainLoading, refreshBalance } = useBlockchain();
+  
   const [amount, setAmount] = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
@@ -28,57 +31,33 @@ export default function AddMoneyDebitScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [transactionSuccess, setTransactionSuccess] = useState(false);
 
   const quickAmounts = ['$50', '$100', '$200', '$500', '$1000'];
 
-  // Get the user's wallet address
   useEffect(() => {
-    const getWalletAddress = async () => {
-      try {
-        if (user) {
-          const wallet = getUserEmbeddedWallet(user);
-          if (wallet?.address) {
-            setWalletAddress(wallet.address);
-            console.log("Wallet address set:", wallet.address);
-          } else {
-            console.log("No wallet address found for user");
-            // Si no hay dirección de wallet, configurar una por defecto para pruebas
-            setWalletAddress("0x1234567890abcdef1234567890abcdef12345678");
-          }
-        }
-      } catch (err) {
-        console.error("Error getting wallet address:", err);
-        // Fallback para pruebas
-        setWalletAddress("0x1234567890abcdef1234567890abcdef12345678");
-      }
-    };
-
+    console.log("AddMoneyDebitScreen montado");
+    refreshBalance();
     getWalletAddress();
   }, [user]);
 
-  // Función para guardar en SecureStore
-  async function saveBalance(balance: number) {
+  const getWalletAddress = async () => {
     try {
-      // Primero obtenemos el balance actual
-      const currentBalanceStr = await SecureStore.getItemAsync('usdc_balance');
-      let currentBalance = 0;
-      
-      if (currentBalanceStr) {
-        currentBalance = parseFloat(currentBalanceStr);
+      if (user) {
+        const wallet = getUserEmbeddedWallet(user);
+        if (wallet?.address) {
+          setWalletAddress(wallet.address);
+          console.log("Wallet address set:", wallet.address);
+        } else {
+          console.log("No wallet address found for user");
+          setWalletAddress("0x1234567890abcdef1234567890abcdef12345678");
+        }
       }
-      
-      // Sumamos el nuevo monto
-      const newBalance = currentBalance + parseFloat(amount);
-      
-      // Guardamos el nuevo balance
-      await SecureStore.setItemAsync('usdc_balance', newBalance.toString());
-      console.log("Balance guardado:", newBalance);
-      return true;
-    } catch (error) {
-      console.error("Error al guardar balance:", error);
-      return false;
+    } catch (err) {
+      console.error("Error getting wallet address:", err);
+      setWalletAddress("0x1234567890abcdef1234567890abcdef12345678");
     }
-  }
+  };
 
   const formatCardNumber = (text: string) => {
     const cleaned = text.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
@@ -115,21 +94,18 @@ export default function AddMoneyDebitScreen() {
       return false;
     }
 
-    // Basic card validation
     const cardNumberClean = cardNumber.replace(/\s/g, '');
     if (cardNumberClean.length < 16) {
       setError('Please enter a valid card number');
       return false;
     }
 
-    // Basic expiry date validation (MM/YY format)
     const [month, year] = expiryDate.split('/');
     if (!month || !year || parseInt(month) > 12 || parseInt(month) < 1) {
       setError('Please enter a valid expiry date (MM/YY)');
       return false;
     }
 
-    // CVV validation
     if (cvv.length < 3) {
       setError('Please enter a valid CVV');
       return false;
@@ -139,6 +115,7 @@ export default function AddMoneyDebitScreen() {
   };
 
   const handleAddMoney = async () => {
+    console.log("Iniciando handleAddMoney");
     setError(null);
     
     if (!validateCardDetails()) {
@@ -148,52 +125,47 @@ export default function AddMoneyDebitScreen() {
     setIsLoading(true);
 
     try {
-      // Simular un retardo de red
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log("Validación exitosa, procesando pago");
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Guardar el balance
-      const saved = await saveBalance(parseFloat(amount));
+      const amountNumber = parseFloat(amount);
+      console.log("Monto a recibir:", amountNumber);
       
-      if (!saved) {
-        throw new Error("Failed to save balance");
+      const result = await receiveUSDC(amountNumber);
+      console.log("Resultado de receiveUSDC:", result);
+      
+      if (!result) {
+        throw new Error("Failed to process transaction");
       }
       
-      // Proporcionar feedback háptico en el éxito
+      setTransactionSuccess(true);
+      
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
 
-      // Mostrar alerta de éxito
       Alert.alert(
         "Purchase Successful",
         `You've successfully purchased $${amount} worth of USDC!`,
         [{ 
           text: "OK", 
           onPress: () => {
-            // Navegar de vuelta a la pantalla de inicio
+            console.log("Navegando de vuelta al inicio");
             try {
-              // Intenta varias opciones de navegación
-              try {
-                // Opción 1: Usar replace en lugar de push
-                router.replace({
-                  pathname: "/",
-                  params: { newAmount: amount }
-                });
-              } catch (e) {
-                console.log("Error en navegación 1:", e);
-                try {
-                  // Opción 2: Intentar sin parámetros
-                  router.replace("/");
-                } catch (e2) {
-                  console.log("Error en navegación 2:", e2);
-                  // Opción 3: Navegar hacia atrás
-                  router.back();
+              router.push({
+                pathname: "/",
+                params: { 
+                  newAmount: amount,
+                  refreshTimestamp: Date.now().toString() 
                 }
-              }
+              });
             } catch (navError) {
               console.error("Error durante la navegación:", navError);
-              // Último recurso: simplemente volvemos atrás
-              router.back();
+              try {
+                router.navigate("/");
+              } catch (e) {
+                router.back();
+              }
             }
           } 
         }]
@@ -201,9 +173,12 @@ export default function AddMoneyDebitScreen() {
     } catch (err) {
       console.error('Error processing payment:', err);
       setError('Failed to process payment. Please try again.');
+    } finally {
       setIsLoading(false);
     }
   };
+
+  const isProcessing = isLoading || blockchainLoading;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -215,6 +190,12 @@ export default function AddMoneyDebitScreen() {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Buy USDC with Card</Text>
           <View style={styles.placeholder} />
+        </View>
+
+        {/* Current Balance */}
+        <View style={styles.balanceContainer}>
+          <Text style={styles.balanceLabel}>Current Balance</Text>
+          <Text style={styles.balanceValue}>${balance.toFixed(2)} USDC</Text>
         </View>
 
         {/* Amount Section */}
@@ -229,6 +210,7 @@ export default function AddMoneyDebitScreen() {
               placeholder="0.00"
               keyboardType="decimal-pad"
               placeholderTextColor="#B39DDB"
+              editable={!isProcessing}
             />
           </View>
         </View>
@@ -249,6 +231,7 @@ export default function AddMoneyDebitScreen() {
               key={quickAmount}
               style={styles.quickAmountButton}
               onPress={() => setAmount(quickAmount.replace('$', ''))}
+              disabled={isProcessing}
             >
               <Text style={styles.quickAmountText}>{quickAmount}</Text>
             </TouchableOpacity>
@@ -277,6 +260,7 @@ export default function AddMoneyDebitScreen() {
                 placeholder="1234 5678 9012 3456"
                 keyboardType="numeric"
                 maxLength={19}
+                editable={!isProcessing}
               />
             </View>
 
@@ -290,6 +274,7 @@ export default function AddMoneyDebitScreen() {
                   placeholder="MM/YY"
                   keyboardType="numeric"
                   maxLength={5}
+                  editable={!isProcessing}
                 />
               </View>
 
@@ -303,10 +288,28 @@ export default function AddMoneyDebitScreen() {
                   keyboardType="numeric"
                   maxLength={4}
                   secureTextEntry
+                  editable={!isProcessing}
                 />
               </View>
             </View>
           </LinearGradient>
+        </View>
+
+        {/* Blockchain Network Info */}
+        <View style={styles.networkContainer}>
+          <Text style={styles.networkTitle}>Network Information</Text>
+          <View style={styles.networkItem}>
+            <Text style={styles.networkLabel}>Network:</Text>
+            <Text style={styles.networkValue}>Base Testnet</Text>
+          </View>
+          <View style={styles.networkItem}>
+            <Text style={styles.networkLabel}>Token:</Text>
+            <Text style={styles.networkValue}>USDC (Stablecoin)</Text>
+          </View>
+          <View style={styles.networkItem}>
+            <Text style={styles.networkLabel}>Exchange Rate:</Text>
+            <Text style={styles.networkValue}>1 USD = 1 USDC</Text>
+          </View>
         </View>
 
         {/* Wallet Address */}
@@ -326,30 +329,26 @@ export default function AddMoneyDebitScreen() {
         )}
 
         <TouchableOpacity
-          style={[styles.addButton, isLoading && styles.addButtonDisabled]}
+          style={[styles.addButton, isProcessing && styles.addButtonDisabled]}
           onPress={handleAddMoney}
-          disabled={isLoading}
+          disabled={isProcessing}
         >
-          {isLoading ? (
+          {isProcessing ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.addButtonText}>Buy USDC</Text>
+            <>
+              <FontAwesome name="check-circle" size={18} color="#fff" style={styles.buttonIcon} />
+              <Text style={styles.addButtonText}>Buy USDC</Text>
+            </>
           )}
         </TouchableOpacity>
 
-        {/* Botón de debug (puedes eliminar esto en producción) */}
-        <TouchableOpacity
-          style={styles.debugButton}
-          onPress={() => {
-            Alert.alert(
-              "Debug Info",
-              `Wallet Address: ${walletAddress || "None"}\nAmount: ${amount || "0"}`,
-              [{ text: "OK" }]
-            );
-          }}
-        >
-          <Text style={styles.debugButtonText}>Check Wallet Status</Text>
-        </TouchableOpacity>
+        {/* Nota sobre hackathon */}
+        <View style={styles.noteContainer}>
+          <Text style={styles.noteText}>
+            Note: For the hackathon, all transactions are processed on Base Testnet and no real charges will be made.
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -384,6 +383,24 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: 40,
+  },
+  balanceContainer: {
+    alignItems: 'center',
+    marginBottom: 10,
+    padding: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginHorizontal: 20,
+    borderRadius: 10,
+  },
+  balanceLabel: {
+    fontSize: 14,
+    color: '#E0E0E0',
+    marginBottom: 5,
+  },
+  balanceValue: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#fff',
   },
   amountSection: {
     padding: 20,
@@ -493,10 +510,38 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
   },
+  networkContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginHorizontal: 20,
+    marginTop: 10,
+    marginBottom: 10,
+    padding: 15,
+    borderRadius: 12,
+  },
+  networkTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  networkItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  networkLabel: {
+    color: '#E0E0E0',
+    fontSize: 14,
+  },
+  networkValue: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
   walletInfoContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     margin: 20,
-    marginTop: 0,
+    marginTop: 10,
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -533,7 +578,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     padding: 16,
     borderRadius: 12,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   addButtonDisabled: {
     opacity: 0.7,
@@ -543,16 +590,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  debugButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    margin: 20,
-    marginTop: 0,
-    padding: 12,
-    borderRadius: 12,
+  buttonIcon: {
+    marginRight: 8,
+  },
+  noteContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
     alignItems: 'center',
   },
-  debugButtonText: {
+  noteText: {
     color: '#E0E0E0',
-    fontSize: 14,
+    fontSize: 12,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });
