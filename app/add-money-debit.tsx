@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,22 +8,77 @@ import {
   ScrollView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { getUserEmbeddedWallet, usePrivy } from '@privy-io/expo';
+import * as Haptics from 'expo-haptics';
+import * as SecureStore from 'expo-secure-store'; // Usando SecureStore para almacenamiento
 
 export default function AddMoneyDebitScreen() {
   const router = useRouter();
+  const { user } = usePrivy();
   const [amount, setAmount] = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
 
   const quickAmounts = ['$50', '$100', '$200', '$500', '$1000'];
+
+  // Get the user's wallet address
+  useEffect(() => {
+    const getWalletAddress = async () => {
+      try {
+        if (user) {
+          const wallet = getUserEmbeddedWallet(user);
+          if (wallet?.address) {
+            setWalletAddress(wallet.address);
+            console.log("Wallet address set:", wallet.address);
+          } else {
+            console.log("No wallet address found for user");
+            // Si no hay dirección de wallet, configurar una por defecto para pruebas
+            setWalletAddress("0x1234567890abcdef1234567890abcdef12345678");
+          }
+        }
+      } catch (err) {
+        console.error("Error getting wallet address:", err);
+        // Fallback para pruebas
+        setWalletAddress("0x1234567890abcdef1234567890abcdef12345678");
+      }
+    };
+
+    getWalletAddress();
+  }, [user]);
+
+  // Función para guardar en SecureStore
+  async function saveBalance(balance: number) {
+    try {
+      // Primero obtenemos el balance actual
+      const currentBalanceStr = await SecureStore.getItemAsync('usdc_balance');
+      let currentBalance = 0;
+      
+      if (currentBalanceStr) {
+        currentBalance = parseFloat(currentBalanceStr);
+      }
+      
+      // Sumamos el nuevo monto
+      const newBalance = currentBalance + parseFloat(amount);
+      
+      // Guardamos el nuevo balance
+      await SecureStore.setItemAsync('usdc_balance', newBalance.toString());
+      console.log("Balance guardado:", newBalance);
+      return true;
+    } catch (error) {
+      console.error("Error al guardar balance:", error);
+      return false;
+    }
+  }
 
   const formatCardNumber = (text: string) => {
     const cleaned = text.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
@@ -48,27 +103,104 @@ export default function AddMoneyDebitScreen() {
     return cleaned;
   };
 
-  const handleAddMoney = async () => {
+  const validateCardDetails = () => {
     if (!amount || !cardNumber || !expiryDate || !cvv) {
       setError('Please fill in all fields');
-      return;
+      return false;
     }
 
-    if (parseFloat(amount) <= 0) {
+    const numericAmount = parseFloat(amount);
+    if (isNaN(numericAmount) || numericAmount <= 0) {
       setError('Please enter a valid amount');
+      return false;
+    }
+
+    // Basic card validation
+    const cardNumberClean = cardNumber.replace(/\s/g, '');
+    if (cardNumberClean.length < 16) {
+      setError('Please enter a valid card number');
+      return false;
+    }
+
+    // Basic expiry date validation (MM/YY format)
+    const [month, year] = expiryDate.split('/');
+    if (!month || !year || parseInt(month) > 12 || parseInt(month) < 1) {
+      setError('Please enter a valid expiry date (MM/YY)');
+      return false;
+    }
+
+    // CVV validation
+    if (cvv.length < 3) {
+      setError('Please enter a valid CVV');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleAddMoney = async () => {
+    setError(null);
+    
+    if (!validateCardDetails()) {
       return;
     }
 
     setIsLoading(true);
-    setError(null);
 
     try {
-      // Simulate API call
+      // Simular un retardo de red
       await new Promise(resolve => setTimeout(resolve, 2000));
-      router.back();
+      
+      // Guardar el balance
+      const saved = await saveBalance(parseFloat(amount));
+      
+      if (!saved) {
+        throw new Error("Failed to save balance");
+      }
+      
+      // Proporcionar feedback háptico en el éxito
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+
+      // Mostrar alerta de éxito
+      Alert.alert(
+        "Purchase Successful",
+        `You've successfully purchased $${amount} worth of USDC!`,
+        [{ 
+          text: "OK", 
+          onPress: () => {
+            // Navegar de vuelta a la pantalla de inicio
+            try {
+              // Intenta varias opciones de navegación
+              try {
+                // Opción 1: Usar replace en lugar de push
+                router.replace({
+                  pathname: "/",
+                  params: { newAmount: amount }
+                });
+              } catch (e) {
+                console.log("Error en navegación 1:", e);
+                try {
+                  // Opción 2: Intentar sin parámetros
+                  router.replace("/");
+                } catch (e2) {
+                  console.log("Error en navegación 2:", e2);
+                  // Opción 3: Navegar hacia atrás
+                  router.back();
+                }
+              }
+            } catch (navError) {
+              console.error("Error durante la navegación:", navError);
+              // Último recurso: simplemente volvemos atrás
+              router.back();
+            }
+          } 
+        }]
+      );
     } catch (err) {
+      console.error('Error processing payment:', err);
       setError('Failed to process payment. Please try again.');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -81,13 +213,13 @@ export default function AddMoneyDebitScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <FontAwesome name="arrow-left" size={20} color="#fff" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Add Money with Card</Text>
+          <Text style={styles.headerTitle}>Buy USDC with Card</Text>
           <View style={styles.placeholder} />
         </View>
 
         {/* Amount Section */}
         <View style={styles.amountSection}>
-          <Text style={styles.amountLabel}>Enter Amount</Text>
+          <Text style={styles.amountLabel}>Enter Amount (USD)</Text>
           <View style={styles.amountContainer}>
             <Text style={styles.currencySymbol}>$</Text>
             <TextInput
@@ -100,6 +232,15 @@ export default function AddMoneyDebitScreen() {
             />
           </View>
         </View>
+
+        {/* USDC Value */}
+        {amount ? (
+          <View style={styles.usdcValueContainer}>
+            <Text style={styles.usdcValueText}>
+              You will receive approximately {parseFloat(amount) ? parseFloat(amount).toFixed(2) : "0.00"} USDC
+            </Text>
+          </View>
+        ) : null}
 
         {/* Quick Amounts */}
         <View style={styles.quickAmountsContainer}>
@@ -168,6 +309,16 @@ export default function AddMoneyDebitScreen() {
           </LinearGradient>
         </View>
 
+        {/* Wallet Address */}
+        <View style={styles.walletInfoContainer}>
+          <Text style={styles.walletLabel}>USDC will be sent to:</Text>
+          <Text style={styles.walletAddress}>
+            {walletAddress 
+              ? `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}` 
+              : "Loading wallet address..."}
+          </Text>
+        </View>
+
         {error && (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{error}</Text>
@@ -182,8 +333,22 @@ export default function AddMoneyDebitScreen() {
           {isLoading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.addButtonText}>Add Money</Text>
+            <Text style={styles.addButtonText}>Buy USDC</Text>
           )}
+        </TouchableOpacity>
+
+        {/* Botón de debug (puedes eliminar esto en producción) */}
+        <TouchableOpacity
+          style={styles.debugButton}
+          onPress={() => {
+            Alert.alert(
+              "Debug Info",
+              `Wallet Address: ${walletAddress || "None"}\nAmount: ${amount || "0"}`,
+              [{ text: "OK" }]
+            );
+          }}
+        >
+          <Text style={styles.debugButtonText}>Check Wallet Status</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -245,6 +410,14 @@ const styles = StyleSheet.create({
     color: '#fff',
     minWidth: 150,
     textAlign: 'center',
+  },
+  usdcValueContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  usdcValueText: {
+    color: '#E0E0E0',
+    fontSize: 16,
   },
   quickAmountsContainer: {
     flexDirection: 'row',
@@ -320,6 +493,28 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
   },
+  walletInfoContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    margin: 20,
+    marginTop: 0,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  walletLabel: {
+    color: '#E0E0E0',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  walletAddress: {
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: Platform.select({
+      ios: 'Courier',
+      android: 'monospace',
+      default: 'monospace',
+    }),
+  },
   errorContainer: {
     backgroundColor: 'rgba(255, 75, 75, 0.1)',
     marginHorizontal: 20,
@@ -335,6 +530,7 @@ const styles = StyleSheet.create({
   addButton: {
     backgroundColor: '#9C27B0',
     margin: 20,
+    marginBottom: 10,
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -346,5 +542,17 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  debugButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    margin: 20,
+    marginTop: 0,
+    padding: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  debugButtonText: {
+    color: '#E0E0E0',
+    fontSize: 14,
   },
 });

@@ -12,6 +12,7 @@
         "@gluestack-ui/nativewind-utils": "^1.0.26",
         "@gluestack-ui/overlay": "^0.1.16",
         "@gluestack-ui/toast": "^1.0.8",
+        "@moonpay/react-native-moonpay-sdk": "^1.0.5",
         "@privy-io/expo": "^0.47.0",
         "@react-native/metro-config": "^0.75.4",
         "babel-plugin-module-resolver": "^5.0.2",
@@ -33,7 +34,7 @@
         "expo-splash-screen": "~0.29.21",
         "expo-status-bar": "~2.0.1",
         "expo-system-ui": "~4.0.8",
-        "expo-web-browser": "~14.0.2",
+        "expo-web-browser": "^14.0.2",
         "fast-text-encoding": "^1.0.6",
         "nativewind": "^4.1.23",
         "qrcode.react": "^3.1.0",
@@ -52,7 +53,7 @@
         "react-native-svg": "15.2.0",
         "react-native-url-polyfill": "^2.0.0",
         "react-native-web": "~0.19.10",
-        "react-native-webview": "13.12.5",
+        "react-native-webview": "^13.12.5",
         "tailwindcss": "3.4.17",
         "viem": "^2.21.51",
       },
@@ -526,6 +527,8 @@
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.0", "", {}, "sha512-gv3ZRaISU3fjPAgNsriBRqGWQL6quFx04YMPW/zD8XMLsU32mhCCbfbO6KZFLjvYpCZ8zyDEgqsgf+PwPaM7GQ=="],
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.25", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ=="],
+
+    "@moonpay/react-native-moonpay-sdk": ["@moonpay/react-native-moonpay-sdk@1.0.5", "", { "peerDependencies": { "react": ">=16", "react-native": ">0.60", "react-native-webview": "*" } }, "sha512-lTshULwaEc5lCkofxHXQe2Lh5Rd5w2qzvUSmvrHfVBg9zDWblsTTkcimsY0fe1H86Cm0NaSkxBd+i4WgJbiicQ=="],
 
     "@noble/curves": ["@noble/curves@1.8.1", "", { "dependencies": { "@noble/hashes": "1.7.1" } }, "sha512-warwspo+UYUPep0Q+vtdVB4Ugn8GGQj8iyB3gnRWsztmUHTI3S1nhdiWNsPUGL0vud7JlRRk1XEu7Lq1KGTnMQ=="],
 

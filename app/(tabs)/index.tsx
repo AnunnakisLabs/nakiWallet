@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,13 @@ import {
   TouchableOpacity,
   Platform,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
-import { Link, useRouter } from 'expo-router';
+import { Link, useRouter, useLocalSearchParams } from 'expo-router';
+import { usePrivy, getUserEmbeddedWallet } from '@privy-io/expo';
+import * as SecureStore from 'expo-secure-store'; // Usamos SecureStore en lugar de AsyncStorage
 
 const CoinBalance = ({ symbol, name, balance, price }) => (
   <TouchableOpacity style={styles.coinCard}>
@@ -31,37 +34,51 @@ const CoinBalance = ({ symbol, name, balance, price }) => (
   </TouchableOpacity>
 );
 
-const QuickAction = forwardRef(({ icon, title, onPress }, ref) => (
-  <TouchableOpacity ref={ref} style={styles.quickAction} onPress={onPress}>
-    <View style={styles.quickActionIcon}>
-      <FontAwesome name={icon} size={24} color="#8134AF" />
-    </View>
-    <Text style={styles.quickActionText}>{title}</Text>
-  </TouchableOpacity>
-));
+// Definimos la interfaz para el tipo de props de QuickAction
+interface QuickActionProps {
+  icon: string;
+  title: string;
+  onPress?: () => void;
+}
+
+const QuickAction = forwardRef<TouchableOpacity, QuickActionProps>(
+  ({ icon, title, onPress }, ref) => (
+    <TouchableOpacity ref={ref} style={styles.quickAction} onPress={onPress}>
+      <View style={styles.quickActionIcon}>
+        <FontAwesome name={icon} size={24} color="#8134AF" />
+      </View>
+      <Text style={styles.quickActionText}>{title}</Text>
+    </TouchableOpacity>
+  )
+);
 
 QuickAction.displayName = 'QuickAction';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const { user, isReady } = usePrivy();
   
-  const user = {
-    firstName: 'Francisco',
-    lastName: 'Campos Diaz',
-    username: '@sasasamaes',
+  // Estado para almacenar los detalles del usuario
+  const [userData, setUserData] = useState({
+    firstName: '',
+    lastName: '',
+    username: '',
     avatar: 'https://avatars.githubusercontent.com/u/993828?s=400&u=ad62640da5de4fc2433fde838986a6897fe3751a&v=4',
-    walletAddress: '0x1234...5678'
-  };
-
-  const walletData = {
-    totalBalance: 3250.00,
+    walletAddress: '',
+  });
+  
+  // Estado para el balance total y transacciones
+  const [walletData, setWalletData] = useState({
+    totalBalance: 0,
     coin: { 
       symbol: 'USDC', 
       name: 'USD Coin', 
-      balance: 3250.00, 
+      balance: 0, 
       price: 1.00 
     },
     recentTransactions: [
+      // Las transacciones iniciales se mantienen como ejemplo
       {
         id: 1,
         type: 'received',
@@ -93,7 +110,143 @@ export default function HomeScreen() {
         time: 'Yesterday'
       },
     ],
-  };
+  });
+  
+  const [loading, setLoading] = useState(true);
+
+  // Función para guardar en SecureStore
+  async function saveBalance(value: string) {
+    await SecureStore.setItemAsync('usdc_balance', value);
+  }
+
+  // Función para leer de SecureStore
+  async function getBalance() {
+    return await SecureStore.getItemAsync('usdc_balance');
+  }
+
+  useEffect(() => {
+    // Cargar el balance guardado al iniciar
+    const loadBalance = async () => {
+      try {
+        const storedBalance = await getBalance();
+        if (storedBalance) {
+          const balance = parseFloat(storedBalance);
+          setWalletData(prev => ({
+            ...prev,
+            totalBalance: balance,
+            coin: { ...prev.coin, balance: balance }
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading balance:', error);
+      }
+    };
+    
+    loadBalance();
+  }, []);
+  
+  // Escuchar cambios en los parámetros para actualizar el balance
+  // Esto se activaría cuando se vuelve de la pantalla add-money-debit con un nuevo monto
+  useEffect(() => {
+    if (params?.newAmount && !isNaN(parseFloat(params.newAmount as string))) {
+      const amount = parseFloat(params.newAmount as string);
+      
+      // Actualizar el balance
+      setWalletData(prev => {
+        const newBalance = prev.totalBalance + amount;
+        
+        // Guardar el nuevo balance en el almacenamiento
+        saveBalance(newBalance.toString())
+          .catch(err => console.error('Error saving balance:', err));
+        
+        // Agregar una nueva transacción
+        const newTransaction = {
+          id: Date.now(),
+          type: 'received',
+          amount: amount,
+          from: 'Card Purchase',
+          fromAddress: '0x0000...0000',
+          avatar: 'https://cdn-icons-png.flaticon.com/512/147/147258.png',
+          message: '💳 USDC Purchase',
+          time: 'Just now'
+        };
+        
+        // Devolver el estado actualizado
+        return {
+          ...prev,
+          totalBalance: newBalance,
+          coin: { ...prev.coin, balance: newBalance },
+          recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 2)]
+        };
+      });
+    }
+  }, [params]);
+
+  // Obtener y actualizar la información del usuario y la wallet cuando Privy está listo
+  useEffect(() => {
+    if (isReady && user) {
+      // Obtener la wallet del usuario
+      const wallet = getUserEmbeddedWallet(user);
+      
+      // Obtener el email del usuario si está disponible
+      let email = '';
+      const emailAccount = user.linked_accounts.find(account => account.type === 'email');
+      if (emailAccount && 'address' in emailAccount) {
+        email = emailAccount.address;
+      }
+      
+      // Función para extraer nombre de usuario del email
+      const extractNameFromEmail = (email: string) => {
+        if (!email) return { firstName: 'User', lastName: '' };
+        
+        // Tomar la parte antes del @ y formatearla
+        const namePart = email.split('@')[0];
+        
+        // Si tiene un punto, dividir en nombre y apellido
+        if (namePart.includes('.')) {
+          const [first, last] = namePart.split('.');
+          return {
+            firstName: first.charAt(0).toUpperCase() + first.slice(1),
+            lastName: last.charAt(0).toUpperCase() + last.slice(1)
+          };
+        }
+        
+        // Si no tiene punto, solo usar el nombre
+        return {
+          firstName: namePart.charAt(0).toUpperCase() + namePart.slice(1),
+          lastName: ''
+        };
+      };
+      
+      const { firstName, lastName } = extractNameFromEmail(email);
+      
+      // Formatear la dirección de la wallet para mostrarla
+      const formatWalletAddress = (address: string | undefined) => {
+        if (!address) return '';
+        return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+      };
+      
+      // Actualizar los datos del usuario
+      setUserData({
+        firstName,
+        lastName,
+        username: `@${firstName.toLowerCase()}${lastName ? lastName.toLowerCase() : ''}`,
+        avatar: 'https://avatars.githubusercontent.com/u/993828?s=400&u=ad62640da5de4fc2433fde838986a6897fe3751a&v=4', // Avatar por defecto
+        walletAddress: formatWalletAddress(wallet?.address || '')
+      });
+      
+      setLoading(false);
+    }
+  }, [isReady, user]);
+
+  if (loading && !userData.firstName) {
+    return (
+      <SafeAreaView style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color="#fff" />
+        <Text style={styles.loadingText}>Loading wallet data...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -103,16 +256,16 @@ export default function HomeScreen() {
           <Link href="/profile" asChild>
             <TouchableOpacity style={styles.profileSection}>
               <Image 
-                source={{ uri: user.avatar }} 
+                source={{ uri: userData.avatar }} 
                 style={styles.profileAvatar} 
               />
               <View style={styles.profileInfo}>
                 <Text style={styles.profileName}>
-                  {user.firstName} {user.lastName}
+                  {userData.firstName} {userData.lastName}
                 </Text>
                 <View style={styles.profileDetails}>
-                  <Text style={styles.profileUsername}>{user.username}</Text>
-                  <Text style={styles.walletAddress}>{user.walletAddress}</Text>
+                  <Text style={styles.profileUsername}>{userData.username}</Text>
+                  <Text style={styles.walletAddress}>{userData.walletAddress}</Text>
                 </View>
               </View>
             </TouchableOpacity>
@@ -147,13 +300,6 @@ export default function HomeScreen() {
           </Link>
         </View>
 
-        {/* USDC Balance */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>My Balance</Text>
-          </View>
-          <CoinBalance {...walletData.coin} />
-        </View>
 
         {/* Recent Transactions */}
         <View style={styles.section}>
@@ -165,7 +311,7 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </Link>
           </View>
-          {walletData.recentTransactions.map((tx) => (
+          {walletData.recentTransactions.map((tx: any) => (
             <TouchableOpacity 
               key={tx.id} 
               style={styles.transaction}
@@ -213,6 +359,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#8134AF',
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#fff',
+    marginTop: 10,
+    fontSize: 16,
   },
   scrollView: {
     flex: 1,

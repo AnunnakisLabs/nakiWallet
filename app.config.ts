@@ -26,7 +26,7 @@ export default {
 				process.env.APP_ENV === "production"
 					? "com.espaciofuturo.nakiwallet"
 					: "com.espaciofuturo.nakiwallet-dev",
-			associatedDomains: ["webcredentials:<your-associated-domain>"],
+		//	associatedDomains: ["webcredentials:<your-associated-domain>"],
 			infoPlist: {
 				NSAppTransportSecurity: {
 					NSAllowsArbitraryLoads: true,
@@ -48,9 +48,9 @@ export default {
 			favicon: "./assets/images/favicon.png",
 		},
 		extra: {
-			privyAppId: "cm6zsggpg00ua6u2xo59pgkdr",
-			privyClientId: "client-WY5gK6eKuf4rCFXuTRLQEEv5miEkfTLhoqiMJrt55UUYg",
-			passkeyAssociatedDomain: "https://<your-associated-domain>",
+			privyAppId: "cm6sgz17600cb18huow3yic6b",
+			privyClientId: "client-WY5gHgkYG4YMwg5Stuao8ZQWdhVkhWwRbJSdeE9UVQhU2",
+			//passkeyAssociatedDomain: "https://<your-associated-domain>",
 			eas: {
 				projectId: "8075b53b-fc35-4a73-ad60-e3fa7379f4c0",
 			},

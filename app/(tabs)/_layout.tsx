@@ -20,15 +20,6 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ size, color }) => (
-            <FontAwesome name="home" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="payment"
         options={{
           title: 'Pay',
@@ -43,6 +34,15 @@ export default function TabLayout() {
           title: 'Store',
           tabBarIcon: ({ size, color }) => (
             <FontAwesome name="shopping-cart" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ size, color }) => (
+            <FontAwesome name="home" size={size} color={color} />
           ),
         }}
       />
@@ -64,7 +64,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
+     {/* <Tabs.Screen
         name="history"
         options={{
           title: 'History',
@@ -72,7 +72,7 @@ export default function TabLayout() {
             <FontAwesome name="history" size={size} color={color} />
           ),
         }}
-      />
+      /> */}
       <Tabs.Screen
         name="profile"
         options={{
