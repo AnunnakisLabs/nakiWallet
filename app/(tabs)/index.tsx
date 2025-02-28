@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
 import { Link, useRouter, useLocalSearchParams } from 'expo-router';
 import { usePrivy, getUserEmbeddedWallet } from '@privy-io/expo';
-import * as SecureStore from 'expo-secure-store'; // Usamos SecureStore en lugar de AsyncStorage
+import useBlockchain from '@/hooks/useBlockchain'; 
 
 const CoinBalance = ({ symbol, name, balance, price }) => (
   <TouchableOpacity style={styles.coinCard}>
@@ -34,7 +34,7 @@ const CoinBalance = ({ symbol, name, balance, price }) => (
   </TouchableOpacity>
 );
 
-// Definimos la interfaz para el tipo de props de QuickAction
+
 interface QuickActionProps {
   icon: string;
   title: string;
@@ -59,7 +59,13 @@ export default function HomeScreen() {
   const params = useLocalSearchParams();
   const { user, isReady } = usePrivy();
   
-  // Estado para almacenar los detalles del usuario
+  const { 
+    balance, 
+    refreshBalance, 
+    getTransactionHistory, 
+    isLoading: blockchainLoading 
+  } = useBlockchain();
+  
   const [userData, setUserData] = useState({
     firstName: '',
     lastName: '',
@@ -68,141 +74,98 @@ export default function HomeScreen() {
     walletAddress: '',
   });
   
-  // Estado para el balance total y transacciones
-  const [walletData, setWalletData] = useState({
-    totalBalance: 0,
-    coin: { 
-      symbol: 'USDC', 
-      name: 'USD Coin', 
-      balance: 0, 
-      price: 1.00 
-    },
-    recentTransactions: [
-      // Las transacciones iniciales se mantienen como ejemplo
-      {
-        id: 1,
-        type: 'received',
-        amount: 500,
-        from: 'Ruben Abarca',
-        fromAddress: '0x8765...4321',
-        avatar: 'https://avatars.githubusercontent.com/u/164825567?v=4',
-        message: '🎨 Commission payment',
-        time: '2h ago'
-      },
-      {
-        id: 2,
-        type: 'sent',
-        amount: 200,
-        to: 'Pedro A. González',
-        toAddress: '0x9876...5432',
-        avatar: 'https://avatars.githubusercontent.com/u/14959399?v=4',
-        message: '🍽️ Dinner split',
-        time: '5h ago'
-      },
-      {
-        id: 3,
-        type: 'received',
-        amount: 1000,
-        from: 'Veronica Jiménez',
-        fromAddress: '0x3456...7890',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120',
-        message: '💼 Project payment',
-        time: 'Yesterday'
-      },
-    ],
-  });
-  
+  const [recentTransactions, setRecentTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Función para guardar en SecureStore
-  async function saveBalance(value: string) {
-    await SecureStore.setItemAsync('usdc_balance', value);
+useEffect(() => {
+  if (params?.refreshTimestamp || params?.newAmount) {
+    loadUserData();
+    loadTransactions();
   }
+}, [params]);
 
-  // Función para leer de SecureStore
-  async function getBalance() {
-    return await SecureStore.getItemAsync('usdc_balance');
-  }
-
-  useEffect(() => {
-    // Cargar el balance guardado al iniciar
-    const loadBalance = async () => {
-      try {
-        const storedBalance = await getBalance();
-        if (storedBalance) {
-          const balance = parseFloat(storedBalance);
-          setWalletData(prev => ({
-            ...prev,
-            totalBalance: balance,
-            coin: { ...prev.coin, balance: balance }
-          }));
-        }
-      } catch (error) {
-        console.error('Error loading balance:', error);
-      }
-    };
-    
-    loadBalance();
-  }, []);
-  
-  // Escuchar cambios en los parámetros para actualizar el balance
-  // Esto se activaría cuando se vuelve de la pantalla add-money-debit con un nuevo monto
-  useEffect(() => {
-    if (params?.newAmount && !isNaN(parseFloat(params.newAmount as string))) {
-      const amount = parseFloat(params.newAmount as string);
-      
-      // Actualizar el balance
-      setWalletData(prev => {
-        const newBalance = prev.totalBalance + amount;
-        
-        // Guardar el nuevo balance en el almacenamiento
-        saveBalance(newBalance.toString())
-          .catch(err => console.error('Error saving balance:', err));
-        
-        // Agregar una nueva transacción
-        const newTransaction = {
-          id: Date.now(),
-          type: 'received',
-          amount: amount,
-          from: 'Card Purchase',
-          fromAddress: '0x0000...0000',
-          avatar: 'https://cdn-icons-png.flaticon.com/512/147/147258.png',
-          message: '💳 USDC Purchase',
-          time: 'Just now'
-        };
-        
-        // Devolver el estado actualizado
-        return {
-          ...prev,
-          totalBalance: newBalance,
-          coin: { ...prev.coin, balance: newBalance },
-          recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 2)]
-        };
-      });
-    }
-  }, [params]);
-
-  // Obtener y actualizar la información del usuario y la wallet cuando Privy está listo
   useEffect(() => {
     if (isReady && user) {
-      // Obtener la wallet del usuario
+      loadAllData();
+    }
+  }, [isReady, user]);
+
+  const loadAllData = async () => {
+    setLoading(true);
+    
+    try {
+      await refreshBalance();
+      await loadTransactions();
+      await loadUserData();
+    } catch (err) {
+      console.error('Error cargando datos:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadTransactions = async () => {
+    try {
+      const transactions = await getTransactionHistory();
+      
+      if (transactions && transactions.length > 0) {
+        setRecentTransactions(transactions);
+      } else {
+        setRecentTransactions([
+          {
+            id: 1,
+            type: 'received',
+            amount: 500,
+            from: 'Ruben Abarca',
+            fromAddress: '0x8765...4321',
+            avatar: 'https://avatars.githubusercontent.com/u/164825567?v=4',
+            message: '🎨 Commission payment',
+            time: '2h ago'
+          },
+          {
+            id: 2,
+            type: 'sent',
+            amount: 200,
+            to: 'Pedro A. González',
+            toAddress: '0x9876...5432',
+            avatar: 'https://avatars.githubusercontent.com/u/14959399?v=4',
+            message: '🍽️ Dinner split',
+            time: '5h ago'
+          },
+          {
+            id: 3,
+            type: 'received',
+            amount: 1000,
+            from: 'Veronica Jiménez',
+            fromAddress: '0x3456...7890',
+            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120',
+            message: '💼 Project payment',
+            time: 'Yesterday'
+          },
+        ]);
+      }
+    } catch (err) {
+      console.error('Error loading transactions:', err);
+    }
+  };
+
+  const loadUserData = async () => {
+    try {
+      if (!user) return;
+      
       const wallet = getUserEmbeddedWallet(user);
       
-      // Obtener el email del usuario si está disponible
       let email = '';
       const emailAccount = user.linked_accounts.find(account => account.type === 'email');
       if (emailAccount && 'address' in emailAccount) {
         email = emailAccount.address;
       }
       
-      // Función para extraer nombre de usuario del email
       const extractNameFromEmail = (email: string) => {
         if (!email) return { firstName: 'User', lastName: '' };
         
-        // Tomar la parte antes del @ y formatearla
         const namePart = email.split('@')[0];
         
-        // Si tiene un punto, dividir en nombre y apellido
         if (namePart.includes('.')) {
           const [first, last] = namePart.split('.');
           return {
@@ -211,7 +174,6 @@ export default function HomeScreen() {
           };
         }
         
-        // Si no tiene punto, solo usar el nombre
         return {
           firstName: namePart.charAt(0).toUpperCase() + namePart.slice(1),
           lastName: ''
@@ -220,13 +182,11 @@ export default function HomeScreen() {
       
       const { firstName, lastName } = extractNameFromEmail(email);
       
-      // Formatear la dirección de la wallet para mostrarla
       const formatWalletAddress = (address: string | undefined) => {
         if (!address) return '';
         return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
       };
       
-      // Actualizar los datos del usuario
       setUserData({
         firstName,
         lastName,
@@ -234,12 +194,12 @@ export default function HomeScreen() {
         avatar: 'https://avatars.githubusercontent.com/u/993828?s=400&u=ad62640da5de4fc2433fde838986a6897fe3751a&v=4', // Avatar por defecto
         walletAddress: formatWalletAddress(wallet?.address || '')
       });
-      
-      setLoading(false);
+    } catch (err) {
+      console.error('Error loading user data:', err);
     }
-  }, [isReady, user]);
+  };
 
-  if (loading && !userData.firstName) {
+  if ((loading || blockchainLoading) && !userData.firstName) {
     return (
       <SafeAreaView style={[styles.container, styles.loadingContainer]}>
         <ActivityIndicator size="large" color="#fff" />
@@ -247,6 +207,29 @@ export default function HomeScreen() {
       </SafeAreaView>
     );
   }
+
+  const checkForNewTransaction = () => {
+    if (params?.newAmount && !isNaN(parseFloat(params.newAmount as string))) {
+      const amount = parseFloat(params.newAmount as string);
+      
+      const newTransaction = {
+        id: Date.now(),
+        type: 'received',
+        amount: amount,
+        from: 'Card Purchase',
+        fromAddress: '0x0000...0000',
+        avatar: 'https://cdn-icons-png.flaticon.com/512/147/147258.png',
+        message: '💳 USDC Purchase',
+        time: 'Just now'
+      };
+      
+      return [newTransaction, ...recentTransactions.slice(0, 2)];
+    }
+    
+    return recentTransactions;
+  };
+
+  const displayTransactions = checkForNewTransaction();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -281,7 +264,17 @@ export default function HomeScreen() {
         {/* Balance Section */}
         <View style={styles.balanceSection}>
           <Text style={styles.balanceLabel}>Total Balance</Text>
-          <Text style={styles.balance}>${walletData.totalBalance.toFixed(2)}</Text>
+          {blockchainLoading ? (
+            <View style={styles.balanceLoading}>
+              <ActivityIndicator size="small" color="#fff" />
+              <Text style={styles.balanceLoadingText}>Updating...</Text>
+            </View>
+          ) : (
+            <Text style={styles.balance}>${balance.toFixed(2)}</Text>
+          )}
+          <View style={styles.networkInfo}>
+            <Text style={styles.networkText}>Base Testnet</Text>
+          </View>
         </View>
 
         {/* Quick Actions */}
@@ -295,7 +288,7 @@ export default function HomeScreen() {
           <Link href="/add-money" asChild>
             <QuickAction icon="plus" title="Add Money" />
           </Link>
-          <Link href="/history" asChild>
+          <Link href="../history" asChild>
             <QuickAction icon="history" title="History" />
           </Link>
         </View>
@@ -311,7 +304,7 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </Link>
           </View>
-          {walletData.recentTransactions.map((tx: any) => (
+          {displayTransactions.map((tx: any) => (
             <TouchableOpacity 
               key={tx.id} 
               style={styles.transaction}
@@ -383,8 +376,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   profileAvatar: {
-    width: 40,
-    height: 40,
+    width: 50,
+    height: 50,
     borderRadius: 20,
     borderWidth: 2,
     borderColor: '#fff',
@@ -416,6 +409,28 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     marginTop: 4,
+  },
+  balanceLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  balanceLoadingText: {
+    color: '#fff',
+    marginLeft: 8,
+    fontSize: 16,
+  },
+  networkInfo: {
+    marginTop: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  networkText: {
+    color: '#E0E0E0',
+    fontSize: 12,
   },
   notificationButton: {
     width: 44,
