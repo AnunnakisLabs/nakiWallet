@@ -2,7 +2,7 @@ import type { ExpoConfig } from "expo/config";
 
 export default {
 	expo: {
-		owner: "espaciofuturo",
+		owner: "AnunnakisLabs",
 		name: "Naki",
 		slug: "naki",
 		version: "1.0.0",
@@ -24,8 +24,8 @@ export default {
 			supportsTablet: true,
 			bundleIdentifier:
 				process.env.APP_ENV === "production"
-					? "com.espaciofuturo.nakiwallet"
-					: "com.espaciofuturo.nakiwallet-dev",
+					? "com.AnunnakisLabs.nakiwallet"
+					: "com.AnunnakisLabs.nakiwallet-dev",
 		//	associatedDomains: ["webcredentials:<your-associated-domain>"],
 			infoPlist: {
 				NSAppTransportSecurity: {
@@ -40,7 +40,7 @@ export default {
 				foregroundImage: "./assets/images/adaptive-icon.png",
 				backgroundColor: "#ffffff",
 			},
-			package: "com.espaciofuturo.nakiwallet",
+			package: "com.AnunnakisLabs.nakiwallet",
 		},
 		web: {
 			bundler: "metro",

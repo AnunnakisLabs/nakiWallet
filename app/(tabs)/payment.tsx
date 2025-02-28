@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,10 +10,11 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  BackHandler,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link, useRouter, useLocalSearchParams } from 'expo-router';
+import { Link, useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 
 const Contact = ({ image, name, username, onSelect }) => (
   <TouchableOpacity style={styles.contact} onPress={onSelect}>
@@ -35,6 +36,7 @@ const RecentContact = ({ image, name, onSelect }) => (
 
 export default function PaymentScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const params = useLocalSearchParams();
   const [amount, setAmount] = useState(params.amount ? String(params.amount) : '');
   const [note, setNote] = useState(params.note ? String(params.note) : '');
@@ -147,7 +149,7 @@ export default function PaymentScreen() {
       setSelectedContact(null);
       
       // Navigate back
-      router.back();
+      handleBackPress();
     } catch (error) {
       setError(type === 'pay' ? 'Payment failed. Please try again.' : 'Request failed. Please try again.');
     } finally {
@@ -155,12 +157,39 @@ export default function PaymentScreen() {
     }
   };
 
+  const handleBackPress = () => {
+    try {
+      if (navigation && navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        router.replace('/'); // O cualquier otra ruta principal de tu app
+      }
+    } catch (error) {
+      console.log('Error al navegar hacia atrás:', error);
+      router.replace('/');
+    }
+  };
+
+  useEffect(() => {
+    const backAction = () => {
+      handleBackPress();
+      return true; // Previene el comportamiento por defecto
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity onPress={() => handleBackPress()} style={styles.backButton}>
             <FontAwesome name="arrow-left" size={20} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Send Money</Text>

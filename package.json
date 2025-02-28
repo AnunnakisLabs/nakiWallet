@@ -7,7 +7,8 @@
 		"android": "DARK_MODE=media expo run:android",
 		"ios": "DARK_MODE=media expo run:ios",
 		"test": "jest --watchAll",
-		"lint": "expo lint"
+		"lint": "expo lint",
+		"build:web": "EXPO_IGNORE_MISSING_NATIVE_CONFIG=1 npx expo export:web"
 	},
 	"jest": {
 		"preset": "jest-expo"
@@ -17,6 +18,7 @@
 		"@expo-google-fonts/inter": "^0.2.3",
 		"@expo/metro-config": "~0.19.0",
 		"@expo/vector-icons": "^14.0.2",
+		"@expo/webpack-config": "^19.0.1",
 		"@gluestack-ui/icon": "^0.1.25",
 		"@gluestack-ui/nativewind-utils": "^1.0.26",
 		"@gluestack-ui/overlay": "^0.1.16",
@@ -61,7 +63,7 @@
 		"react-native-screens": "~4.4.0",
 		"react-native-svg": "15.2.0",
 		"react-native-url-polyfill": "^2.0.0",
-		"react-native-web": "~0.19.10",
+		"react-native-web": "~0.19.13",
 		"react-native-webview": "^13.12.5",
 		"tailwindcss": "3.4.17",
 		"viem": "^2.21.51"
