@@ -2,9 +2,9 @@ import type { ExpoConfig } from "expo/config";
 
 export default {
 	expo: {
-		owner: "AnunnakisLabs",
+		owner: "sasasamaes",
 		name: "Naki",
-		slug: "naki",
+		slug: "naki-wallet",
 		version: "1.0.0",
 		orientation: "portrait",
 		icon: "./assets/images/icon.png",
@@ -52,8 +52,14 @@ export default {
 			privyClientId: "client-WY5gHgkYG4YMwg5Stuao8ZQWdhVkhWwRbJSdeE9UVQhU2",
 			//passkeyAssociatedDomain: "https://<your-associated-domain>",
 			eas: {
-				projectId: "8075b53b-fc35-4a73-ad60-e3fa7379f4c0",
+				projectId: "0c3b730d-a565-4c58-810b-e280de3c3a55",
 			},
+		},
+		updates: {
+			"url": "https://u.expo.dev/0c3b730d-a565-4c58-810b-e280de3c3a55"
+		},
+		runtimeVersion: {
+			"policy": "appVersion"
 		},
 		plugins: [
 			"expo-router",
