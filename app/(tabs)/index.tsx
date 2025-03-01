@@ -122,8 +122,19 @@ useEffect(() => {
             message: '🎨 Commission payment',
             time: '2h ago'
           },
+       
           {
             id: 2,
+            type: 'received',
+            amount: 28.50,
+            from: 'Anouk Rímola',
+            fromAddress: '0x9876...5432',
+            avatar: 'https://avatars.githubusercontent.com/u/77553677?v=4',
+            message: '💼 Project payment',
+            time: '5 hours ago'
+          },
+          {
+            id: 3,
             type: 'sent',
             amount: 200,
             to: 'Pedro A. González',
@@ -131,16 +142,6 @@ useEffect(() => {
             avatar: 'https://avatars.githubusercontent.com/u/14959399?v=4',
             message: '🍽️ Dinner split',
             time: '5h ago'
-          },
-          {
-            id: 3,
-            type: 'received',
-            amount: 1000,
-            from: 'Veronica Jiménez',
-            fromAddress: '0x3456...7890',
-            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120',
-            message: '💼 Project payment',
-            time: 'Yesterday'
           },
         ]);
       }

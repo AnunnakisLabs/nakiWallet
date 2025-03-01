@@ -285,41 +285,46 @@ const refreshBalance = useCallback(async () => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     return [
+     
       {
-        id: '0x' + Math.random().toString(16).substring(2, 10),
+        id: 1,
         type: 'received',
-        amount: 50,
-        from: 'Alice',
-        fromAddress: '0x765d392C019D36372f9b2D9Ce947D73fd12Aa02d',
+        amount: 500,
+        from: 'Ruben Abarca',
+        fromAddress: '0x8765...4321',
         toAddress: address,
         timestamp: Date.now() - 3600000, 
         status: 'confirmed',
-        message: '🎮 Payment for game assets',
-        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120'
+        message: '🎨 Commission payment',
+        avatar: 'https://avatars.githubusercontent.com/u/164825567?v=4',
+        time: '2h ago'
       },
       {
-        id: '0x' + Math.random().toString(16).substring(2, 10),
-        type: 'sent',
-        amount: 25,
-        to: 'Bob',
-        toAddress: '0x9876543210fedcba9876543210fedcba98765432',
+        id: 2,
+        type: 'received',
+        amount: 28.50,
+        to: 'Anouk Rímola',
+        toAddress: '0x9876...5432',
         fromAddress: address,
         timestamp: Date.now() - 86400000, 
-        message: '🍕 Dinner split',
-        avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=120'
+        message: '💼 Project payment',
+        avatar: 'https://avatars.githubusercontent.com/u/77553677?v=4',
+        time: '5 hours ago'
       },
       {
-        id: '0x' + Math.random().toString(16).substring(2, 10),
+        id: 3,
         type: 'received',
-        amount: 100,
-        from: 'Carol',
-        fromAddress: '0xabcdef0123456789abcdef0123456789abcdef01',
+        amount: 200,
+        from: 'Pedro A. González',
+        fromAddress: '0x9876...5432',
         toAddress: address,
         timestamp: Date.now() - 172800000, 
         status: 'confirmed', 
-        message: '💻 Freelance project',
-        avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120'
-      }
+        message: '🍽️ Dinner split',
+        avatar: 'https://avatars.githubusercontent.com/u/14959399?v=4',
+        time: '5h ago'
+      },
+     
     ];
   }
 
