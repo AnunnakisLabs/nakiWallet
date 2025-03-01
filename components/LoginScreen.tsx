@@ -14,19 +14,20 @@ import { FontAwesome } from '@expo/vector-icons'
 import { useLoginWithEmail } from '@privy-io/expo'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
+import { LinearGradient } from 'expo-linear-gradient'
 
 export const LoginScreen = () => {
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   
-  // Hook de autenticación de Privy para email
+  // Privy authentication hook for email
   const { state: emailState, sendCode, loginWithCode } = useLoginWithEmail({
     onSendCodeSuccess({ email }) {
       console.log(`OTP sent to ${email}`)
     },
     onLoginSuccess(user, isNewUser) {
-      // Encontrar la cuenta de email vinculada si existe
+      // Find linked email account if it exists
       const emailAccount = user.linked_accounts.find(account => account.type === 'email');
       const emailAddress = emailAccount ? emailAccount.address : 'unknown';
       
@@ -34,7 +35,7 @@ export const LoginScreen = () => {
     },
     onError(error) {
       console.error('Error during login flow:', error)
-      setError(error.message || 'Error al iniciar sesión')
+      setError(error.message || 'Login error')
     },
   })
 
@@ -42,119 +43,155 @@ export const LoginScreen = () => {
   const isLoading = emailState.status === 'sending-code' || emailState.status === 'submitting-code'
 
   return (
-    <SafeAreaView style={styles.container}>
+    <LinearGradient
+      colors={['#8134AF', '#9C27B0']}
+      style={styles.container}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
       <StatusBar style="light" />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
         >
-          <View style={styles.header}>
-            <Text style={styles.title}>Naki 👽</Text>
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Sign in to continue</Text>
-          </View>
-          
-          <View style={styles.form}>
-            {!isEmailFlow ? (
-              <>
-                <View style={styles.inputContainer}>
-                  <FontAwesome
-                    name="envelope-o"
-                    size={20}
-                    color="#666"
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    value={email}
-                    onChangeText={setEmail}
-                    placeholder="Email address"
-                    placeholderTextColor="#666"
-                    style={styles.input}
-                    inputMode="email"
-                    autoCapitalize="none"
-                    editable={!isLoading}
-                  />
-                </View>
-                
-                <TouchableOpacity
-                  style={[
-                    styles.signInButton,
-                    (isLoading || !email) && styles.signInButtonDisabled,
-                  ]}
-                  disabled={isLoading || !email}
-                  onPress={() => sendCode({ email })}
-                >
-                  {isLoading ? (
-                    <ActivityIndicator color="#fff" size="small" />
-                  ) : (
-                    <Text style={styles.signInButtonText}>
-                      Enviar Código
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <TextInput
-                  value={code}
-                  onChangeText={setCode}
-                  placeholder="Enter verification code"
-                  placeholderTextColor="#666"
-                  style={styles.input}
-                  inputMode="numeric"
-                  editable={!isLoading}
-                />
-                
-                <TouchableOpacity
-                  style={[
-                    styles.signInButton,
-                    (isLoading || !code) && styles.signInButtonDisabled,
-                  ]}
-                  disabled={isLoading || !code}
-                  onPress={() => loginWithCode({ code, email })}
-                >
-                  {isLoading ? (
-                    <ActivityIndicator color="#fff" size="small" />
-                  ) : (
-                    <Text style={styles.signInButtonText}>Iniciar Sesión</Text>
-                  )}
-                </TouchableOpacity>
-              </>
-            )}
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.logoContainer}>
+              <Text style={styles.logoText}>naki</Text>
+              <Text style={styles.walletText}>WALLET</Text>
+            </View>
             
-            {error && (
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            )}
-          </View>
+            <View style={styles.formContainer}>
+              <Text style={styles.subtitle}>
+                The simplest digital wallet
+              </Text>
+              
+              {!isEmailFlow ? (
+                <>
+                  <View style={styles.inputWrapper}>
+                    <View style={styles.inputContainer}>
+                      <FontAwesome
+                        name="envelope-o"
+                        size={20}
+                        color="#8134AF"
+                        style={styles.inputIcon}
+                      />
+                      <TextInput
+                        value={email}
+                        onChangeText={setEmail}
+                        placeholder="Email address"
+                        placeholderTextColor="#8888"
+                        style={styles.input}
+                        inputMode="email"
+                        autoCapitalize="none"
+                        editable={!isLoading}
+                      />
+                    </View>
+                  </View>
+                  
+                  <TouchableOpacity
+                    style={[
+                      styles.signInButton,
+                      (isLoading || !email) && styles.signInButtonDisabled,
+                    ]}
+                    disabled={isLoading || !email}
+                    onPress={() => sendCode({ email })}
+                  >
+                    {isLoading ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <>
+                        <Text style={styles.signInButtonText}>
+                          Continue
+                        </Text>
+                        <FontAwesome name="arrow-right" size={16} color="#fff" style={styles.buttonIcon} />
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <View style={styles.codeContainer}>
+                    <Text style={styles.codeInstructions}>
+                      We've sent a code to <Text style={styles.emailHighlight}>{email}</Text>
+                    </Text>
+                    
+                    <View style={styles.inputWrapper}>
+                      <View style={styles.inputContainer}>
+                        <FontAwesome
+                          name="key"
+                          size={20}
+                          color="#8134AF"
+                          style={styles.inputIcon}
+                        />
+                        <TextInput
+                          value={code}
+                          onChangeText={setCode}
+                          placeholder="Enter verification code"
+                          placeholderTextColor="#8888"
+                          style={styles.input}
+                          inputMode="numeric"
+                          editable={!isLoading}
+                        />
+                      </View>
+                    </View>
+                    
+                    <TouchableOpacity
+                      style={[
+                        styles.signInButton,
+                        (isLoading || !code) && styles.signInButtonDisabled,
+                      ]}
+                      disabled={isLoading || !code}
+                      onPress={() => loginWithCode({ code, email })}
+                    >
+                      {isLoading ? (
+                        <ActivityIndicator color="#fff" size="small" />
+                      ) : (
+                        <>
+                          <Text style={styles.signInButtonText}>Sign In</Text>
+                          <FontAwesome name="arrow-right" size={16} color="#fff" style={styles.buttonIcon} />
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
+              
+              {error && (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              )}
+            </View>
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>
-              {isEmailFlow 
-                ? "¿No recibiste el código? " 
-                : "Ingresa tu correo electrónico para crear una cuenta o iniciar sesión."}
-            </Text>
-            {isEmailFlow && (
-              <TouchableOpacity onPress={() => sendCode({ email })}>
-                <Text style={styles.footerLink}>Reenviar</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>
+                {isEmailFlow 
+                  ? "Didn't receive the code? " 
+                  : "Your email is the gateway to a secure digital wallet"}
+              </Text>
+              {isEmailFlow && (
+                <TouchableOpacity onPress={() => sendCode({ email })}>
+                  <Text style={styles.footerLink}>Resend</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </LinearGradient>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#8134AF',
+  },
+  safeArea: {
+    flex: 1,
   },
   keyboardView: {
     flex: 1,
@@ -164,88 +201,144 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 24,
   },
-  header: {
+  logoContainer: {
     alignItems: 'center',
-    marginTop: 20,
+    justifyContent: 'center',
+    marginTop: 80,
+    marginBottom: 20,
   },
-  title: {
-    fontSize: 28,
+  logoText: {
+    fontSize: 70,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 8,
+    letterSpacing: 1,
+  },
+  walletText: {
+    fontSize: 16,
+    color: '#fff',
+    letterSpacing: 4,
+    marginTop: -5,
+  },
+  formContainer: {
+    marginVertical: 20,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#E0E0E0',
-    marginBottom: 32,
+    fontSize: 18,
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 30,
+    fontWeight: '500',
   },
-  form: {
-    marginTop: 20,
+  inputWrapper: {
+    borderRadius: 16,
+    marginBottom: 24,
+    ...Platform.select({
+      ios: {
+        shadowColor: 'rgba(0,0,0,0.2)',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+      },
+    }),
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    borderRadius: 12,
-    marginBottom: 16,
-    padding: 4,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
   },
   inputIcon: {
-    padding: 10,
+    marginRight: 12,
   },
   input: {
     flex: 1,
-    height: 50,
-    color: '#000',
+    height: 60,
+    color: '#333',
     fontSize: 16,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    marginBottom: 16,
+    paddingVertical: 12,
   },
   signInButton: {
     backgroundColor: '#5B2C8D',
-    borderRadius: 12,
-    height: 56,
+    borderRadius: 16,
+    height: 60,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: 'rgba(0,0,0,0.2)',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+      },
+    }),
   },
   signInButtonDisabled: {
     opacity: 0.7,
   },
   signInButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
   },
+  buttonIcon: {
+    marginLeft: 8,
+  },
+  codeContainer: {
+    marginBottom: 20,
+  },
+  codeInstructions: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  emailHighlight: {
+    fontWeight: 'bold',
+  },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
     marginTop: 24,
-    flexWrap: 'wrap',
+    marginBottom: 16,
   },
   footerText: {
-    color: '#E0E0E0',
+    color: 'rgba(255, 255, 255, 0.8)',
     fontSize: 14,
     textAlign: 'center',
+    marginBottom: 8,
   },
   footerLink: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
-    marginLeft: 4,
+    textDecorationLine: 'underline',
   },
   errorContainer: {
-    backgroundColor: 'rgba(255, 0, 0, 0.1)',
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 16,
+    borderRadius: 16,
     marginTop: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 0, 0, 0.3)',
   },
   errorText: {
-    color: '#ff6b6b',
+    color: '#fff',
     fontSize: 14,
     textAlign: 'center',
   },
-})
+});
