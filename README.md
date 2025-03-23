@@ -1,161 +1,141 @@
 # Naki Wallet
 
+Naki Wallet es una aplicación móvil para gestionar criptomonedas USDC en la red Base Testnet, desarrollada con React Native, Expo y tecnologías Web3.
 
-## Overview
+![Naki Wallet Banner](https://via.placeholder.com/800x200/8134AF/FFFFFF?text=Naki+Wallet)
 
-Naki Wallet is a mobile-first crypto wallet application built on the Base blockchain ecosystem, designed to simplify cryptocurrency transactions for everyday users. It combines the security and decentralization of blockchain with the user experience of traditional payment apps. The application focuses on USDC stablecoin transactions, making it accessible for those who want to use cryptocurrency without worrying about price volatility.
+## Características Principales
 
-## Key Features
+- 💰 **Gestión de USDC**: Visualiza tu balance de USDC en Base Testnet
+- 📱 **Autenticación Sencilla**: Acceso con correo electrónico mediante Privy
+- 💲 **Compra de USDC**: Integración con MoonPay para adquirir USDC
+- 🔄 **Transacciones**: Envía y recibe USDC de manera sencilla
+- 📊 **Historial**: Visualiza todas tus transacciones conectado a la blockchain
+- 📂 **Wallet Embebida**: Wallet no-custodial generada automáticamente
 
-- **Simple User Authentication**: Email login with OTP verification, plus social authentication options (Google, Apple)
-- **Embedded Crypto Wallet**: Automatic wallet creation and management via Privy SDK
-- **Peer-to-Peer Payments**: Easily send and request money from contacts
-- **Multiple Funding Options**: Add funds via debit cards, bank transfers, PayPal, or cryptocurrency
-- **Transaction History**: Track and monitor all your financial activities
-- **QR Code & NFC Support**: Scan to pay functionality for quick transactions
-- **Social Features**: Connect with friends and view their profiles
+## Requisitos Previos
 
-## Tech Stack
-
-- **Frontend**: React Native with Expo
-- **UI Framework**: NativeWind (Tailwind CSS for React Native) with Gluestack UI
-- **Navigation**: Expo Router
-- **Blockchain Integration**: Privy SDK for wallet management
-- **Styling**: CSS-in-JS with styled-components
-- **Authentication**: Privy SDK with passkey support
-- **Network**: Base Testnet (for development/hackathon)
-
-## Installation
-
-### Prerequisites
-
-- Node.js (v18 or later)
-- npm or [bun](https://bun.sh) package manager
+- Node.js (v18.x o superior)
+- npm o yarn
 - Expo CLI (`npm install -g expo-cli`)
-- iOS Simulator (macOS) or Android Emulator
+- Cuenta de Privy para autenticación
+- Cuenta de MoonPay para pagos (opcional para desarrollo)
 
-### Setup Instructions
+## Instalación
 
-1. **Clone the repository**
+1. Clona el repositorio:
+   ```bash
+   git clone https://github.com/tu-usuario/nakiWallet.git
+   cd nakiWallet
+   ```
 
-```bash
-git clone https://github.com/your-username/AnunnakisLabs/nakiWallet.git
-cd nakiWallet
-```
+2. Instala las dependencias:
+   ```bash
+   npm install
+   # o
+   yarn install
+   ```
 
-2. **Install dependencies**
+3. Copia el archivo `.env.example` a `.env`:
+   ```bash
+   cp .env.example .env
+   ```
 
-Using npm:
-```bash
-npm install
-```
+4. Configura las variables de entorno en el archivo `.env`:
+   - Obtén un ID de aplicación de Privy y actualiza `EXPO_PUBLIC_PRIVY_APP_ID`
+   - Si deseas utilizar MoonPay, actualiza las credenciales de MoonPay
+   - Los valores de conexión a Base Testnet ya están configurados
 
-Or using bun:
-```bash
-bun install
-```
+## Conexión a Base Testnet
 
-3. **Configure your environment**
+La aplicación está configurada para conectarse a Base Testnet (Sepolia). Las variables importantes para esta conexión son:
 
-Create a Privy account at [dashboard.privy.io](https://dashboard.privy.io) and set up an app client.
+- `EXPO_PUBLIC_BLOCKCHAIN_RPC_URL`: URL del RPC de Base Testnet
+- `EXPO_PUBLIC_CHAIN_ID`: ID de la cadena de Base Testnet (84532)
+- `EXPO_PUBLIC_USDC_CONTRACT_ADDRESS`: Contrato de USDC en Base Testnet
 
-Update the `app.config.ts` file with your credentials:
+Estos valores ya están preconfigurados en el archivo `.env.example`.
 
-```typescript
-// in app.config.ts
-extra: {
-  privyAppId: "YOUR_PRIVY_APP_ID",
-  privyClientId: "YOUR_PRIVY_CLIENT_ID",
-},
-```
+## Ejecución de la Aplicación
 
-4. **Configure your application identifiers**
+1. Inicia la aplicación:
+   ```bash
+   npm start
+   # o
+   yarn start
+   ```
 
-Update your bundle identifiers/package names in `app.config.ts`:
+2. Escanea el código QR con la aplicación Expo Go en tu dispositivo móvil, o presiona 'a' para abrir en un emulador Android o 'i' para iOS.
 
-```typescript
-ios: {
-  bundleIdentifier: "com.yourcompany.nakiwallet"
-},
-android: {
-  package: "com.yourcompany.nakiwallet"
-},
-```
+## Modo Simulado
 
-5. **Run the application**
+La aplicación puede funcionar en dos modos:
 
-For Expo Go (quick development):
-```bash
-npx expo start
-```
+- **Modo Conectado**: Conectado directamente a Base Testnet (requiere conexión a internet)
+- **Modo Simulado**: Utilizando datos simulados para desarrollo sin conexión
 
-For iOS:
-```bash
-npx expo run:ios
-```
+El modo simulado se activará automáticamente si hay problemas de conexión con la blockchain.
 
-For Android:
-```bash
-npx expo run:android
-```
+## Funcionalidades Principales
 
-## Project Structure
+### Visualización de Transacciones
 
-```
-naki/
-├── app/                          # Main application screens
-│   ├── (tabs)/                   # Tab-based navigation screens
-│   ├── _layout.tsx               # Root layout with authentication
-│   └── [various screen files]    # Individual screens
-├── assets/images/                # App icons and images
-├── components/                   # Reusable UI components
-│   ├── gluestack-ui/             # UI framework components
-│   └── [various components]      # Custom components
-├── hooks/                        # Custom React hooks
-│   └── useBlockchain.ts          # Blockchain interaction hook
-├── constants/                    # App constants
-├── app.config.ts                 # Expo configuration
-├── babel.config.js               # Babel configuration
-├── global.css                    # Global CSS styles
-├── tailwind.config.js            # Tailwind CSS configuration
-└── package.json                  # Project dependencies
-```
+La aplicación permite ver tu historial de transacciones conectándose directamente a Base Testnet. Puedes:
 
-## Blockchain Integration
+- Filtrar transacciones por tipo (Recibidas/Enviadas)
+- Filtrar por periodo de tiempo
+- Ver detalles completos de cada transacción
+- Acceder al explorador de bloques para verificar cada transacción
 
-Naki Wallet integrates with the Base Testnet blockchain through the Privy SDK. The implementation includes:
+### Envío de USDC
 
-- Automatic wallet creation for new users
-- USDC token transfers between wallets
-- Balance monitoring and transaction history
-- Simulated blockchain transactions for development/testing
+Para enviar USDC a otra dirección:
 
-### Base Testnet Configuration
+1. En la pantalla principal, toca "Send"
+2. Ingresa la dirección del destinatario o escanea un código QR
+3. Ingresa el monto a enviar
+4. Confirma la transacción
 
-The application is pre-configured to use Base Testnet with the following parameters:
+### Recepción de USDC
 
-```
-Chain ID: 0x14a33 (84531 in decimal)
-RPC URL: https://goerli.base.org
-```
+Para recibir USDC:
 
-## Development Notes
+1. En la pantalla principal, toca "Receive"
+2. Comparte tu dirección o código QR con el remitente
 
-- **For Hackathon/Demo Mode**: Some functionality (particularly blockchain interactions) is simulated for demonstration purposes using SecureStore for persistent state.
-- **UX Priority**: The app is designed with mobile-first principles, focusing on intuitive user experience.
-- **Expo Modules**: The project uses several Expo packages that may require additional setup for ejected applications.
+### Compra de USDC
 
-## License
+Para comprar USDC con tarjeta o transferencia bancaria:
 
-[MIT License](LICENSE)
+1. En la pantalla principal, toca "Add Money"
+2. Selecciona el método de pago (tarjeta, banco, etc.)
+3. Sigue las instrucciones de MoonPay para completar la compra
 
-## Contributing
+## Estructura del Proyecto
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+- `/app`: Pantallas de la aplicación (usando Expo Router)
+- `/components`: Componentes reutilizables
+- `/hooks`: Hooks personalizados para lógica de negocio
+- `/services`: Servicios de conexión a la blockchain y APIs
+- `/utils`: Funciones utilitarias
 
-## Acknowledgements
+## Resolución de Problemas
 
-- Privy SDK for wallet and authentication services
-- Base for blockchain infrastructure
-- Expo team for the development framework
-- Gluestack UI for component library
+Si encuentras problemas de conexión con Base Testnet:
+
+1. Verifica tu conexión a internet
+2. Asegúrate de que las variables de entorno estén correctamente configuradas
+3. La aplicación cambiará automáticamente al modo simulado si no puede conectarse
+
+## Créditos
+
+- Design UI/UX: Sasasamaes
+- Blockchain Integration: Equipo Naki
+
+## Licencia
+
+Este proyecto está licenciado bajo [MIT License](LICENSE).
+
+---
+
+Desarrollado con ❤️ por el equipo de Naki Wallet

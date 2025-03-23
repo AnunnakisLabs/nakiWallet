@@ -41,11 +41,11 @@ interface QuickActionProps {
   onPress?: () => void;
 }
 
-const QuickAction = forwardRef<TouchableOpacity, QuickActionProps>(
+const QuickAction = forwardRef<React.ElementRef<typeof TouchableOpacity>, QuickActionProps>(
   ({ icon, title, onPress }, ref) => (
     <TouchableOpacity ref={ref} style={styles.quickAction} onPress={onPress}>
       <View style={styles.quickActionIcon}>
-        <FontAwesome name={icon} size={24} color="#8134AF" />
+        <FontAwesome name={icon as any} size={24} color="#8134AF" />
       </View>
       <Text style={styles.quickActionText}>{title}</Text>
     </TouchableOpacity>
@@ -109,8 +109,61 @@ useEffect(() => {
       const transactions = await getTransactionHistory();
       
       if (transactions && transactions.length > 0) {
-        setRecentTransactions(transactions);
+        // Formateamos las transacciones reales de la blockchain para la UI
+        const formattedTransactions = transactions.map((tx) => {
+          // Calculamos una representación amigable del tiempo
+          const getTimeString = (timestamp) => {
+            const now = Date.now();
+            const diff = now - timestamp;
+            
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+            if (diff < 604800000) return `${Math.floor(diff / 86400000)}d ago`;
+            return new Date(timestamp).toLocaleDateString();
+          };
+          
+          // Formatear dirección para mostrar
+          const formatAddress = (address) => {
+            return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+          };
+          
+          // Determinar el mensaje según el tipo
+          const getMessage = (type, amount) => {
+            if (type === 'received') return '💰 USDC Received';
+            if (type === 'sent') return '📤 USDC Sent';
+            return 'USDC Transaction';
+          };
+          
+          // Elegir un avatar según el tipo
+          const getAvatar = (type, address) => {
+            // Usar una seed basada en la dirección para consistencia
+            const seed = parseInt(address.slice(2, 10), 16) % 100;
+            if (type === 'received') {
+              return `https://avatars.dicebear.com/api/bottts/${seed}.svg`;
+            }
+            return `https://avatars.dicebear.com/api/identicon/${seed}.svg`;
+          };
+          
+          return {
+            id: tx.id || tx.txHash,
+            type: tx.type,
+            amount: tx.amount,
+            from: tx.type === 'received' ? `Address ${formatAddress(tx.fromAddress)}` : '',
+            to: tx.type === 'sent' ? `Address ${formatAddress(tx.toAddress)}` : '',
+            fromAddress: formatAddress(tx.fromAddress),
+            toAddress: formatAddress(tx.toAddress),
+            avatar: getAvatar(tx.type, tx.type === 'received' ? tx.fromAddress : tx.toAddress),
+            message: getMessage(tx.type, tx.amount),
+            time: getTimeString(tx.timestamp),
+            txHash: tx.txHash,
+            isBlockchain: true
+          };
+        });
+        
+        setRecentTransactions(formattedTransactions);
       } else {
+        // Transacciones de ejemplo como fallback
         setRecentTransactions([
           {
             id: 1,
@@ -122,7 +175,6 @@ useEffect(() => {
             message: '🎨 Commission payment',
             time: '2h ago'
           },
-       
           {
             id: 2,
             type: 'received',
@@ -305,44 +357,73 @@ useEffect(() => {
               </TouchableOpacity>
             </Link>
           </View>
-          {displayTransactions.map((tx: any) => (
-            <TouchableOpacity 
-              key={tx.id} 
-              style={styles.transaction}
-              onPress={() => router.push({
-                pathname: '/friend-profile',
-                params: {
-                  name: tx.type === 'received' ? tx.from : tx.to,
-                  username: `@${(tx.type === 'received' ? tx.from : tx.to).toLowerCase().replace(' ', '')}`,
-                  address: tx.type === 'received' ? tx.fromAddress : tx.toAddress,
-                  avatar: tx.avatar
-                }
-              })}
-            >
-              <Image 
-                source={{ uri: tx.avatar }} 
-                style={styles.transactionAvatar}
-              />
-              <View style={styles.transactionInfo}>
-                <View style={styles.transactionHeader}>
-                  <Text style={styles.transactionName}>
-                    {tx.type === 'received' ? tx.from : tx.to}
+          {displayTransactions.length > 0 ? (
+            displayTransactions.map((tx: any) => (
+              <TouchableOpacity 
+                key={tx.id} 
+                style={styles.transaction}
+                onPress={() => {
+                  if (tx.isBlockchain) {
+                    // Para transacciones blockchain, mostrar la información del hash
+                    router.push({
+                      pathname: "../transaction-details" as any,
+                      params: {
+                        type: tx.type,
+                        amount: tx.amount.toString(),
+                        fromAddress: tx.fromAddress,
+                        toAddress: tx.toAddress,
+                        time: tx.time,
+                        txHash: tx.txHash
+                      }
+                    });
+                  } else {
+                    // Para transacciones de ejemplo, mantener comportamiento original
+                    router.push({
+                      pathname: '/friend-profile',
+                      params: {
+                        name: tx.type === 'received' ? tx.from : tx.to,
+                        username: `@${(tx.type === 'received' ? tx.from : tx.to).toLowerCase().replace(' ', '')}`,
+                        address: tx.type === 'received' ? tx.fromAddress : tx.toAddress,
+                        avatar: tx.avatar
+                      }
+                    });
+                  }
+                }}
+              >
+                <Image 
+                  source={{ uri: tx.avatar }} 
+                  style={styles.transactionAvatar}
+                />
+                <View style={styles.transactionInfo}>
+                  <View style={styles.transactionHeader}>
+                    <Text style={styles.transactionName}>
+                      {tx.type === 'received' ? tx.from || 'Received USDC' : tx.to || 'Sent USDC'}
+                    </Text>
+                    <Text style={[
+                      styles.transactionValue,
+                      { color: tx.type === 'received' ? '#4BB543' : '#FF4B4B' }
+                    ]}>
+                      {tx.type === 'received' ? '+' : '-'}${typeof tx.amount === 'number' ? tx.amount.toFixed(2) : tx.amount}
+                    </Text>
+                  </View>
+                  <Text style={styles.transactionAddress}>
+                    {tx.type === 'received' ? tx.fromAddress : tx.toAddress}
                   </Text>
-                  <Text style={[
-                    styles.transactionValue,
-                    { color: tx.type === 'received' ? '#4BB543' : '#FF4B4B' }
-                  ]}>
-                    {tx.type === 'received' ? '+' : '-'}${tx.amount.toFixed(2)}
-                  </Text>
+                  {tx.txHash && (
+                    <Text style={styles.txHash} numberOfLines={1} ellipsizeMode="middle">
+                      {tx.txHash}
+                    </Text>
+                  )}
+                  <Text style={styles.transactionMessage}>{tx.message}</Text>
+                  <Text style={styles.transactionTime}>{tx.time}</Text>
                 </View>
-                <Text style={styles.transactionAddress}>
-                  {tx.type === 'received' ? tx.fromAddress : tx.toAddress}
-                </Text>
-                <Text style={styles.transactionMessage}>{tx.message}</Text>
-                <Text style={styles.transactionTime}>{tx.time}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.noTransactions}>
+              <Text style={styles.noTransactionsText}>No transactions yet</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -614,5 +695,23 @@ const styles = StyleSheet.create({
       android: 'monospace',
       default: 'monospace',
     }),
+  },
+  txHash: {
+    fontSize: 11,
+    color: '#8134AF',
+    marginBottom: 4,
+    fontFamily: Platform.select({
+      ios: 'Courier',
+      android: 'monospace',
+      default: 'monospace',
+    }),
+  },
+  noTransactions: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  noTransactionsText: {
+    color: '#666',
+    fontSize: 14,
   },
 });
